@@ -9,10 +9,10 @@ AI（Claude.ai 等）と技術資料を共有するためのパブリックリ�
 
 ## 内容
 
-| ファイル                   | 概要                                     |
-|----------------------------|------------------------------------------|
-| Tasker_Version_History.md  | Tasker バージョン別機能一覧（6.0〜6.6）  |
-| Notion_MCP_Tips.md         | Notion MCP ツールの注意点・エラー対処法  |
+| ファイル                   | 概要                                     | raw URL |
+|----------------------------|------------------------------------------|---------|
+| Tasker_Version_History.md  | Tasker バージョン別機能一覧（6.0〜6.6）  | [raw](https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/Tasker_Version_History.md) |
+| Notion_MCP_Tips.md         | Notion MCP ツールの注意点・エラー対処法  | [raw](https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/Notion_MCP_Tips.md) |
 
 ## 注意事項
 
