@@ -1,6 +1,6 @@
 # Notion MCP ツール Tips & 注意点
 
-最終更新: 2026-02-11
+最終更新: 2026-02-14
 
 Claude.ai / Claude Code から Notion MCP ツールを使う際のナレッジ集。
 実際の作業で発生したエラーと正しい対処法をまとめる。
@@ -194,6 +194,52 @@ Date プロパティは3つの展開キーで設定する:
 | data_source_id の確認 | データベースURL → `<data-source url="collection://xxxxx">` から取得 |
 
 **注意**: `data_source_id` を直接 `notion-fetch` に渡すと 404 エラーになる。データベース URL を使うこと。
+
+---
+
+## 8. data_source_id と database_id は別物
+
+Notion MCP と Notion REST API では、データベースを指すIDが異なる。
+
+- **`data_source_id`**: MCP ツール（create-pages, update-data-source 等）で使用。`notion-fetch` の `<data-source url="collection://xxxxx">` から取得
+- **`database_id`**: Notion REST API（`/v1/databases/{id}/query` 等）で使用。ブラウザ URL の UUID 部分から取得
+
+### 例
+
+```
+MCP data_source_id:  5faa9701-1ff6-487a-b8fb-8703728e188d
+REST database_id:    d172ea5b-98bf-43b6-a85b-4245e50f1de9
+↑ 同じデータベースでも ID が異なる
+```
+
+### database_id の取得方法
+
+ブラウザで DB を開き、URL から取得:
+
+```
+https://www.notion.so/d172ea5b98bf43b6a85b4245e50f1de9?v=...
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                       これが database_id（ハイフン付きでもなしでも可）
+```
+
+### 安定性
+
+- `database_id` はページの永続UUID。移動しても**変わらない**
+- `data_source_id` は内部コレクションID。構造変更で変わる可能性あり
+
+---
+
+## 9. Notion Integration のアクセス範囲と DB 移動
+
+Internal Integration のアクセス権は、設定場所によって DB 移動時の挙動が異なる。
+
+- **DB そのものに設定** → アクセス権維持（安全）
+- **親ページに設定** → 移動先が対象外なら**アクセス権が外れる**
+
+### 推奨
+
+REST API から DB にアクセスする場合は、Integration を**データベースそのもの**に直接設定する。
+親ページ経由の設定だと、ページ整理で DB を移動した際に 404 エラーになるリスクがある。
 
 ---
 
