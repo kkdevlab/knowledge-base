@@ -51,3 +51,29 @@ Tasker の変数は厳密な型（Integer や String など）を持たない。
 
 - 数値比較（「〜より大きい」「〜以下」など）→ **Maths: ...** 系を使う
 - 特定の文字と一致するか → **Matches** を使う
+
+---
+
+## Variable Split + JavaScriptlet の連携
+
+Variable Split で分割した変数を JavaScriptlet で使う場合の注意点。
+
+### NG パターン
+
+Variable Split で `%result` を分割後、JavaScriptlet 内で：
+
+- `result2` → 存在しない変数（エラー: `result2 is not defined`）
+- `result[1]` → 文字列の2文字目を返す（配列要素ではない）
+
+### OK パターン
+
+Split 後に明示的に別変数へコピーしてから JavaScriptlet で参照する：
+
+1. `Variable Set %http_data = %result(2)`
+2. JavaScriptlet 内で `JSON.parse(http_data)` を使用
+
+### なぜこうなるか
+
+Variable Split 後の `%result` は Tasker 配列 `%result()` になる。
+JavaScriptlet への注入時、配列はカンマ区切り文字列として渡されるため、
+JavaScript の `result` は文字列であり、`result[N]` は N+1 番目の**文字**を返す。
