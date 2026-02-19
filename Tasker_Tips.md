@@ -77,3 +77,46 @@ Split 後に明示的に別変数へコピーしてから JavaScriptlet で参�
 Variable Split 後の `%result` は Tasker 配列 `%result()` になる。
 JavaScriptlet への注入時、配列はカンマ区切り文字列として渡されるため、
 JavaScript の `result` は文字列であり、`result[N]` は N+1 番目の**文字**を返す。
+
+---
+
+## Tasker ドット記法による JSON オブジェクトアクセス
+
+Tasker の変数に JSON オブジェクトが入っている場合、ドット記法でフィールドに直接アクセスできる。
+
+### 使用例
+
+```json
+%result = {"success":true,"status":200,"count":3,"data":{...},"error_msg":""}
+
+%result.success   → true
+%result.data      → {...}  （Notion レスポンス本体など）
+%result.error_msg → ""
+```
+
+### Condition での使用
+
+```text
+If %result.success ~ false  → Goto ERRCODE
+```
+
+### Variable Set での使用
+
+```text
+Variable Set %json_data = %result.data
+```
+
+### メリット
+
+- Variable Split → 個別変数コピー の手順が不要
+- JavaScriptlet に渡す前に必要なフィールドだけ絞り込める
+- エラーチェックが Condition 1行で書ける
+
+### JavaScriptlet との組み合わせパターン（推奨）
+
+```text
+1. Perform Task: Sub_NotionQuery → Return Value Variable: %result
+2. Goto ERRCODE  If: %result.success ~ false
+3. Variable Set: %json_data = %result.data
+4. JavaScriptlet: var data = JSON.parse(local('json_data')); ...
+```
