@@ -120,3 +120,130 @@ Variable Set %json_data = %result.data
 3. Variable Set: %json_data = %result.data
 4. JavaScriptlet: var data = JSON.parse(local('json_data')); ...
 ```
+
+---
+
+## Widget V2 レイアウト構築
+
+Tasker 6.4以降の標準ホーム画面ウィジェット機能。
+
+### ホーム画面への配置手順
+
+1. ホーム画面を長押し → 「ウィジェット」
+2. 「Tasker」→「Widget V2」を選択して配置
+3. **ウィジェット名を入力**（例: `DateWidget`）← タスクから参照するキーになる
+
+### 利用可能な要素（+ ボタンで追加）
+
+| 要素 | 用途 |
+|------|------|
+| Text | テキスト表示 |
+| Image | 画像 |
+| Button / Icon Button | タップ可能なボタン |
+| Column | 縦並びコンテナ |
+| Row | 横並びコンテナ |
+| Grid | グリッドレイアウト |
+| Box | 汎用コンテナ |
+| Spacer | 余白 |
+| Scaffold / Title Bar | 画面フレーム |
+
+### 2×2 グリッドの構造
+
+```
+Column（Size: Fill）
+├── Row（1行目）
+│   ├── Text（Is Weighted: True）
+│   └── Text（Is Weighted: True）
+└── Row（2行目）
+    ├── Text（Is Weighted: True）
+    └── Text（Is Weighted: True）
+```
+
+### 重要なプロパティ
+
+| プロパティ | 推奨設定 | 効果 |
+|-----------|---------|------|
+| Column > Size | `Fill` | ウィジェット全体を埋める |
+| Row > Size | 数値入力（Manual）| Columnと異なりドロップダウンなし |
+| Text > Is Weighted | `True` | Row内で均等幅に配分 |
+| Text > Max Lines | `1` | 折り返し防止 |
+| Text > Align | `Center` | テキスト中央寄せ |
+| Text > Text Size | 数値（sp） | フォントサイズ指定 |
+
+### Size ドロップダウンの選択肢（Column等のコンテナ）
+
+- `Fill` : 幅・高さともに親要素いっぱいに広げる
+- `FillWidth` : 幅だけ広げる
+- `FillHeight` : 高さだけ広げる
+- `Manual` : Width / Height を数値で個別指定
+
+### レイアウトエディタのパンくず（ナビゲーション）
+
+```
+≡ » ≡ » ||| » Tt
+↑    ↑    ↑    ↑
+Root Column Row  Text（現在地）
+```
+
+タップすることで上位の要素に移動できる。
+
+### Perform Task で戻り値を受け取る
+
+サブタスクが `Return` アクションで返す値は、呼び出し元の **Return Variable** フィールドに指定した変数に入る。省略すると失われる。
+
+```
+Perform Task: Sub_Date
+  Par1: 0
+  Return Variable: %result   ← 必須
+```
+
+---
+
+## Widget V2 の変数置換における日本語文字の注意点
+
+### 問題
+
+Tasker は日本語（CJK文字）を変数名の一部として認識するため、変数直後に日本語を書くと置換が失敗する。
+
+```
+%month月%day日  → そのまま表示される（置換されない）
+```
+
+### 原因
+
+Javaの `Character.isLetter('月')` は `true` を返すため、Taskerのパーサーが `月` を変数名の続きと解釈する。
+
+### 解決策
+
+**① 配列変数の `(n)` 記法を使う（推奨）**
+
+```
+%result(2)月%result(3)日  → 2月26日（正常置換）
+```
+
+閉じ括弧 `)` が変数名の終端として明確に機能する。
+
+**② スペースを入れる（次善策）**
+
+```
+%month 月%day 日  → 2 月26 日（スペースが入る）
+```
+
+**③ `%(varname)` 記法は Tasker では使えない**
+
+```
+%(month)月  → そのまま表示される（非対応）
+```
+
+### 推奨パターン
+
+ゼロ除去しつつ配列記法を維持する：
+
+```
+// Variable Split で %result(2)="02", %result(3)="25" を取得後
+Variable Set: %result(2) = %result(2)  Do Maths: ON  → "2"
+Variable Set: %result(3) = %result(3)  Do Maths: ON  → "25"
+
+// Widget V2 の Text に
+%result(2)月%result(3)日  → 2月26日 ✓
+```
