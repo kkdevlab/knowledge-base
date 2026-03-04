@@ -453,3 +453,44 @@ inverseSurface / inverseOnSurface / inversePrimary
   ]
 }
 ```
+
+---
+
+## Wait Until の仕様と正しい使い方
+
+### 仕様
+
+- `Wait Until` は**条件が成立するまで無期限に待機**する
+- `Seconds` パラメータは「タイムアウト」ではなく**条件再チェックの最大間隔**（インターバル）
+- 条件が永遠に成立しない場合、タスクはハングする
+- タイムアウト機能は存在しない（コミュニティで Feature Request 段階）
+
+参考: [Tasker Wait Until 公式ドキュメント](https://tasker.joaoapps.com/userguide/en/help/ah_wait_until.html)
+
+### 適切な使用例（条件が必ず成立する場合）
+
+```text
+Wait Until: %http_done = 1    ← 非同期タスクが必ず完了する
+Wait Until: %WIFI ~ on        ← 接続試行中なので必ず成立する
+```
+
+### タイムアウト付き待機が必要な場合
+
+**ポーリングループ**を使う（For × 小さいWait + Break）：
+
+```text
+Variable Set: %wk_flag = 0
+For: %wk_i, 1 to 10        ← 10回 × 0.5秒 = 最大5秒
+  Wait: 0.5秒
+  If: %wk_flag = 1
+    Break                   ← 条件成立で即脱出
+  End If
+End For
+```
+
+または複合条件（タイムスタンプ比較）：
+
+```text
+Variable Set: %expire = %TIMES + 5   ← 5秒後のタイムスタンプ
+Wait Until: %wk_flag = 1 OR %TIMES > %expire
+```
