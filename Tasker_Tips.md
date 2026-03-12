@@ -520,6 +520,73 @@ Wait Until: %wk_flag = 1 OR %TIMES > %expire
 
 ---
 
+## Widget V2 Row内の均等幅分割（isWeighted）
+
+### 問題
+
+Row内の子要素に `fillMaxWidth: true` を設定すると、1つ目の要素が全幅を占有し2つ目以降が消える。
+`weight: 1` も効果なし。
+
+### 正しい方法
+
+```json
+{
+  "type": "Row",
+  "size": {"fillMaxWidth": true},
+  "children": [
+    {"type": "Button", "text": "左", "isWeighted": true},
+    {"type": "Button", "text": "右", "isWeighted": true}
+  ]
+}
+```
+
+- Row 自体に `"size": {"fillMaxWidth": true}` を設定
+- 各子要素に `"isWeighted": true` を設定（`fillMaxWidth` / `weight` は効かない）
+
+### 実装例
+
+`UpdateDateWidget.tsk.xml` の2列日付表示（西暦列 + 和暦列）が参考実装。
+Column 要素で `"isWeighted": true` を使い均等分割している。
+
+---
+
+## Widget V2 taskVariables でTasker変数（%var）は展開されない
+
+### 問題
+
+```json
+{"task": "UpdateDateWidget", "taskVariables": {"par1": "%WK_Today"}}
+```
+
+`%WK_Today` がリテラル文字列のままタスクに渡される（変数展開されない）。
+
+### 原因
+
+Widget V2 は taskVariables の値に含まれる Tasker 変数参照（`%var`）を展開しない。
+
+### 解決策：ラッパータスクパターン
+
+```
+button_config.json
+  → "task": "V2_UpdateDateWidget"（ラッパー）
+
+V2_UpdateDateWidget タスク:
+  A1: Perform Task [
+       Name: UpdateDateWidget
+       Par1: %WK_Today      ← グローバル変数を直接参照
+       Par2: %WK_Holiday
+  ]
+```
+
+ラッパータスク内では通常の Tasker 変数参照が機能するため、グローバル変数を正しく渡せる。
+
+### ルール
+
+- Widget V2 の taskVariables → 静的な値（デバイスID等）のみ使う
+- Tasker グローバル変数を渡す必要がある場合 → ラッパータスクを作成する
+
+---
+
 ## Custom Setting でシステム設定を読み取る
 
 Custom Setting アクション（code 235）は書き込みだけでなく読み取りにも使える。
