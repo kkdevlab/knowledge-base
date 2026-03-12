@@ -421,6 +421,29 @@ Variable Convert: %text  Function: JSON Encode
 
 - タップ時の状態（true/false）が `%par1` としてタスクに渡される
 - `commandPrefix: true` にするとコマンド文字列の先頭に状態が付加される
+- `taskVariables` で `par1` を明示指定すると、スイッチ状態の自動渡しが上書きされるため注意
+
+#### Image 要素
+
+- 画像ソースのプロパティ名は **`url`**（`image` や `src` は不正解）
+- Tasker 内蔵アイコンの参照形式: `"android.resource://net.dinglisch.android.taskerm/drawable/アイコン名"`
+- `tint` プロパティで色を指定可能（例: `"tint": "#ffffff"` で白）
+
+```json
+{
+  "type": "Image",
+  "url": "android.resource://net.dinglisch.android.taskerm/drawable/mw_action_bug_report",
+  "size": { "width": 20, "height": 20 },
+  "tint": "#ffffff"
+}
+```
+
+#### Scaffold の背景色
+
+- Scaffold は親要素の `backgroundColor` を**引き継がない**（Jetpack Compose の仕様）
+- 黒背景にしたい場合は**ネストされた全 Scaffold に個別指定が必要**
+- 確実な方法: 全 Scaffold に `"backgroundColor": "#000000"` を追加
+- 透明化: `"backgroundColor": "#00000000"`（ARGB 先頭2桁=アルファ）で可能な可能性あり（未検証）
 
 ### Material You カラーパレット
 
@@ -494,3 +517,24 @@ End For
 Variable Set: %expire = %TIMES + 5   ← 5秒後のタイムスタンプ
 Wait Until: %wk_flag = 1 OR %TIMES > %expire
 ```
+
+---
+
+## Custom Setting でシステム設定を読み取る
+
+Custom Setting アクション（code 235）は書き込みだけでなく読み取りにも使える。
+
+### 読み取り方法
+
+- **Value**: 空のまま
+- **Read Setting To**: 読み取り先の変数名（例: `%usb_adb`）
+
+```text
+Custom Setting: Type=Global, Name="adb_enabled", Value=(空), Read Setting To=%usb_adb
+```
+
+→ `%usb_adb` に現在の値（`"0"` または `"1"`）が格納される。
+
+### 書き込みと同時に読み取る場合
+
+Value と Read Setting To の両方を指定すると、書き込んだ後の値が変数に入る。
