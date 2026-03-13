@@ -403,7 +403,9 @@ Variable Convert: %text  Function: JSON Encode
 #### Grid の注意点
 
 - 子要素が10個を超えるとスクロール可能になる
-- `columns`（固定列数）または `minItemWidth`（最小幅自動計算）で指定
+- **`fixed`**（固定列数）または **`minSize`**（最小幅自動計算）で指定
+  - ❌ `"columns": 2` → 無効（全アイテムが横1行に並ぶ）
+  - ✅ `"fixed": 2` → 2列の縦グリッドになる
 
 ### コンテンツ要素
 
