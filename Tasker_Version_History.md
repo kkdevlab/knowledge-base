@@ -1,9 +1,9 @@
 # Tasker バージョン管理
 
-最終更新: 2026-03-13
+最終更新: 2026-03-26
 インストール済み: **6.6.20**
 最新リリース: **6.6.20**（2026/02/24）
-ベータ版: **6.7.0-beta**（Scenes V2 — 詳細: `Tasker_ScenesV2_Beta670.md`）
+ベータ版: **6.7.1-beta**（Scenes V2 Update 1 — 詳細: `Tasker_ScenesV2_67x-beta.md`）
 
 ---
 
@@ -135,6 +135,40 @@
 ---
 
 ## 変更履歴
+
+### v6.7.1-beta（2026/03）— Scenes V2 Update 1
+
+> **互換性破壊**: Scenes V2 のインタラクション設定は再設定が必要
+
+| 機能 | 概要 |
+| ------ | ------ |
+| States | 各コンポーネントに状態を持たせ、変数として UI 内部・Tasker 間で利用可能 |
+| Events | コンポーネント固有イベント（テキスト変更、スイッチ切替等）で Tasker タスクを実行 |
+| Actions | コンポーネントの状態を直接変更（Checkbox/Switch の Toggle 等） |
+| Run Scene V2 Action | Tasker アクションからシーンコンポーネントのアクションを実行 |
+| Scene V2 Event | シーン内の変化で Tasker タスクをトリガー |
+| Java Code 連携 | Java Code アクションから全 Scenes V2 操作が可能、60fps 更新対応 |
+| 新コンポーネント | Card / Checkbox / Navigation Bar / Navigation Item / Icon Button |
+| 新モディファイア | Blur |
+| Input Text in Overlay | オーバーレイでテキスト入力が動作するように |
+| アニメーション GIF | Image コンポーネントでループ GIF をサポート |
+| テンプレート | レイアウトをテンプレートとして保存可能 |
+| AI Component Only モード | 選択中コンポーネントのみ生成（高速・既存を保持） |
+| プレビュー変数解決 | プレビュー上で変数を実際の値に展開 |
+| テスト変数ピン留め | エディタを離れても Test Variables が消えない |
+| デフォルト表示モード | 画面プロパティでデフォルト表示モードを設定可能 |
+| Keep Display On | シーン表示中に画面スリープを防止 |
+| Undo/Redo 長押し | 複数ステップを一気に戻る/進む |
+| エディタ 8 タブ化 | Tree / Properties / Modifiers / States / Events / Actions / JSON / AI |
+
+**Scenes V2 以外の変更**:
+
+- **Wifi Connected** 状態：位置情報権限不要オプション追加
+- **Calendar Entry** 状態：`Start Early` / `End Later` 引数追加
+- `ACCESS_LOCATION_EXTRA_COMMANDS` 権限追加
+- Shizuku 非使用オプション追加
+
+---
 
 ### v6.6（2026/02）— Shizuku、Java コード
 
