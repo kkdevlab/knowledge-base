@@ -589,6 +589,121 @@ V2_UpdateDateWidget タスク:
 
 ---
 
+## 未設定変数の検出イディオム（~R \%）
+
+### 問題
+
+Tasker では、変数が未設定の場合、その変数名がそのまま展開される。
+
+```text
+%txt_time が未設定 → 値は文字列 "%txt_time"（%記号を含む）
+%txt_time が設定済 → 値は "09:00" など（%記号を含まない）
+```
+
+### 検出方法
+
+```text
+If [ %txt_time ~R \% ]
+```
+
+- 演算子: **Matches Regex** (`~R`)
+- パターン: `\%`（Java正規表現でリテラルの `%` にマッチ）
+- 「値に `%` が含まれるか」= 「変数が未設定か」を検出する
+
+### なぜ "Is/Isn't Set" を使わないか
+
+`Is Set` / `Isn't Set` 演算子は変数が一度でも代入されたかを見る。
+Scene V2 の `sv2_element_value()` は、対応要素が空欄の場合に展開されない変数名を返す（"Is Set" 状態でも値が `%...`）ため、 `~R \%` の方が確実。
+
+### 空欄のコメントを許容する場合のパターン
+
+```text
+If [ %comment ~R \% ]
+    Variable Set %comment = " "   ← 半角スペースで上書きして"未設定扱い"を解除
+End If
+```
+
+エラーにせずデフォルト値で続行する場合はこのパターンを使う。
+
+---
+
+## For ループのコロン範囲記法
+
+Tasker の For アクションの `Items` フィールドは、コンマ区切りリストのほかに **コロン範囲記法** を使える。
+
+### 記法
+
+| 形式 | 意味 |
+| ------ | ------ |
+| `1:10` | 1 から 10 まで（ステップ=1） |
+| `1:%count` | 1 から変数の値まで |
+| `1:%sv2_element_id(#)` | 1 から配列要素数まで |
+| `1:2:10` | 1 から 10 まで、ステップ=2 |
+
+### XML の実構造
+
+```text
+Variable: %idx
+Items: 1:%sv2_element_id(#)   ← Items 1フィールドに start:end
+Step: 1                        ← arg2 がステップ
+```
+
+疑似コードで「`For %idx, 1, N`（カンマ3引数）」と書きがちだが、Tasker UI では **Items 欄に `start:end` を一括指定**する形式が正しい。
+
+---
+
+## Scene V2 全要素スキャンパターン（sv2_element_id/value ループ）
+
+Scene V2 のテキスト入力・選択値などを一括取得する際のパターン。
+GetElement(code 483) を要素ごとに呼ぶ代わりに、For ループで全要素を走査してID比較で振り分ける。
+
+### パターン
+
+```text
+For %idx, Items: 1:%sv2_element_id(#)
+
+    If [ %sv2_element_id(%idx) ~ txt_time ]
+        Variable Set %txt_time = %sv2_element_value(%idx)
+    Else If [ %sv2_element_id(%idx) ~ comment ]
+        Variable Set %comment = %sv2_element_value(%idx)
+    Else If [ %sv2_element_id(%idx) ~ val_busy ]
+        Variable Set %val_busy = %sv2_element_value(%idx)
+    Else If [ %sv2_element_id(%idx) ~ val_temp ]
+        Variable Set %val_temp = %sv2_element_value(%idx)
+    End If
+
+End For
+```
+
+### スキャンパターンのメリット
+
+- GetElement を要素数分呼ぶ必要がない（アクション数削減）
+- ID比較なので要素の追加・順序変更に強い
+- `%sv2_element_id(#)` で要素数を動的に取得するため要素数変更も自動対応
+
+### スキャンパターンの注意事項
+
+- `%sv2_element_id(%idx) ~ "txt_time"` の `~` は Matches（シンプルパターン）
+  - ワイルドカードなし = 大文字小文字を区別しない完全一致として動作
+- `sv2_element_value()` が返す値は、空欄の input area は `%sv2_element_valueN` という未展開変数名になる
+  → 取得後に `~R \%` でバリデーションすること
+
+---
+
+## 正規表現エスケープ文字の日本語環境差異（`\.` vs `¥.`）
+
+Variable Search Replace の Search フィールドに正規表現を使う場合：
+
+| 入力環境 | 表記 | 意味 |
+| --------- | ------ | ------ |
+| ASCII 環境（PC 直接編集など） | `\.` | バックスラッシュ + ドット = リテラルのドット |
+| 日本語 Android キーボード | `¥.` | 円マーク + ドット = 同じくリテラルのドット |
+
+**Taskerの正規表現エンジン（Java）は `¥`（円マーク）を `\`（バックスラッシュ）と同等に扱う。**
+どちらで入力しても動作は同一。日本語環境では `¥.` と表示されることが多い。
+
+---
+
 ## Custom Setting でシステム設定を読み取る
 
 Custom Setting アクション（code 235）は書き込みだけでなく読み取りにも使える。
