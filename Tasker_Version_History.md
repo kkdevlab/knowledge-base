@@ -136,6 +136,37 @@
 
 ## 変更履歴
 
+### v6.7.3-beta（2026/04）— Scenes V2 Update 2
+
+> **互換性破壊（2回目）**: Scenes V2 のインタラクション設定は再設定が必要。**Result Binding が廃止**（変数ベースに統一）。既存の **Show Scene V2** アクションはすべて「結果を待たない」モードになる → **With Result** モードへの手動変更が必要。
+
+| 機能 | 概要 |
+| ------ | ------ |
+| Dream Mode | Android スクリーンセーバーに Scene V2 を設定可能 |
+| Interactive Editor Mode | エディタ内でそのままレイアウトをテスト操作（変数・ShowWhen 等） |
+| Event Handlers 刷新 | 1イベントに複数の順序付きアクションを設定可能（Set Variable / Output to Variable / Toggle Variable / Dismiss Layout / Haptic Feedback / Run Component Action） |
+| Screen Events | Back Pressed（キャンセル可）/ Screen Shown / Screen Hidden / Variable Changed |
+| Flow Row / Flow Column | 内容に応じて自動折り返しする動的レイアウト |
+| Segmented Button Row | ラジオボタン的コンポーネント（複数選択オプションあり） |
+| Marquee modifier | テキスト等のコンポーネントを自動スクロール表示 |
+| Show When Mode | 非表示時に invisible（不可視）/ gone（完全除去）を選択可能 |
+| 表示モード 7種類に拡張 | `With Result` バリアント追加により結果待ちを明示的に選択する形式に |
+| エディタからタスク作成 | シーンエディタから直接タスクを作成・編集可能（同プロジェクトに保存） |
+| スワイプ変数 | `%sv2_swipe_length` / `%sv2_swipe_direction` 追加 |
+| Transitions タブ | コンポーネントの表示/非表示時アニメーションを設定 |
+
+**Scenes V2 以外の変更**:
+
+- Out Of Memory エラー大幅改善
+- 実行中タスク画面にアクション実行時間を表示（1秒更新）
+- **Get Network Info** に Get Cell Info オプション追加
+- Android 17 Advanced Protection Mode 対応（直接購入版: `isAccessibilityTool` フラグ）
+- Widget V2 エディタプレビュー表示バグ修正
+- `%DATE` フォーマット変更バグ修正（既に変わった場合は Android 設定 → アプリ → Tasker の言語設定からリセット）
+- Shizuku 権限リクエスト修正
+
+---
+
 ### v6.7.1-beta（2026/03）— Scenes V2 Update 1
 
 > **互換性破壊**: Scenes V2 のインタラクション設定は再設定が必要

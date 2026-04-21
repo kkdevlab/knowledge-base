@@ -3,11 +3,12 @@
 > **注意**: これはベータ版の仕様です。正式版リリース時に変更される可能性があります。
 > 正式版では差分情報のみ公開される可能性があるため、ベータ版の全仕様をここに記録しています。
 
-- **ソース**: Reddit r/tasker 投稿（[DEV] Tasker 6.7.0-beta - Scenes V2! / 6.7.1-beta Update 1）
+- **ソース**: Reddit r/tasker 投稿（[DEV] Tasker 6.7.0-beta / 6.7.1-beta Update 1 / 6.7.3-beta Update 2）
 - **初版記録日**: 2026-03-13（6.7.0-beta）
-- **更新日**: 2026-03-26（6.7.1-beta Update 1）
+- **更新日**: 2026-04-21（6.7.3-beta Update 2）
 - **デモ動画（6.7.0）**: [youtu.be/SU0pG36GkUo](https://youtu.be/SU0pG36GkUo)
-- **デモ動画（6.7.1）**: [youtu.be/pffxU1p2wT4](https://youtu.be/pffxU1p2wT4)
+- **デモ動画（6.7.1）**: [youtu.be/pffxU1p2wlt4](https://youtu.be/pffxU1p2wlt4)
+- **デモ動画（6.7.3）**: [youtu.be/3mId6ekwGuI](https://youtu.be/3mId6ekwGuI)
 
 ---
 
@@ -68,7 +69,11 @@
 | NavigationItem | ナビゲーションアイテム |
 | Card | カードコンテナ（6.7.1 新規） |
 | Checkbox | チェックボックス、Toggle アクション対応（6.7.1 新規） |
-| IconButton | アイコンボタン（6.7.1 新規） |
+| IconButton | アイコンボタン、URL・SVG・base64 画像も使用可能（6.7.1 新規、6.7.3 で画像ソース拡張） |
+| Segmented Button Row | ラジオボタン的セレクター、複数選択オプションあり（6.7.3 新規） |
+| Segmented Button Item | Segmented Button Row の子要素（6.7.3 新規） |
+| Flow Row | 内容に応じて自動折り返しする横方向コンテナ（6.7.3 新規） |
+| Flow Column | 内容に応じて自動折り返しする縦方向コンテナ（6.7.3 新規） |
 
 ### 特殊コンポーネント
 | コンポーネント | 説明 |
@@ -101,17 +106,24 @@
 | VerticalScroll / HorizontalScroll | スクロール |
 | WindowDrag | オーバーレイドラッグのアンカー指定 |
 | Blur | ぼかし効果（6.7.1 新規） |
+| Marquee | テキスト等のコンポーネントを自動スクロール表示（iterations / velocity / spacing 設定可）（6.7.3 新規） |
 
 ---
 
-## 表示モード（4種類）
+## 表示モード（7種類）※6.7.3 で拡張
+
+> **6.7.3 破壊的変更**: 既存の Show Scene V2 アクションはすべて「結果を待たない」モードに変更される。結果を受け取りたい場合は **With Result** バリアントに手動で変更が必要。
 
 | モード | 説明 |
 |--------|------|
 | Fullscreen | エッジtoエッジ、ステータスバー/ナビバー制御、イマーシブモード |
+| Fullscreen With Result | Fullscreen + 結果を待つ |
 | Dialog | 中央ウィンドウ、ブラーバックグラウンド、コンテンツに自動サイズ |
+| Dialog With Result | Dialog + 結果を待つ |
 | Overlay | フローティングウィンドウ、任意位置、ドラッグ可能、パススルー |
+| Overlay With Result | Overlay + 結果を待つ |
 | Accessibility Overlay | 通知パネル・システム設定画面等のシステム画面上にも表示可能 |
+| Dream | Android スクリーンセーバーとして表示（6.7.3 新規） |
 
 ---
 
@@ -129,15 +141,39 @@
 
 **Tasker イベント（6.7.1 追加）**: Scene V2 Event — シーン内コンポーネントの変化で Tasker タスクをトリガー
 
+### Screen Events（6.7.3 新規）
+
+シーン自体にイベントハンドラを設定可能:
+
+| イベント | 説明 |
+| ------- | ---- |
+| Back Pressed | デバイスの戻るボタン押下（キャンセル可能） |
+| Screen Shown | シーン初回表示時 |
+| Screen Hidden | シーン非表示時 |
+| Variable Changed | シーン内の任意変数が変化したとき |
+
 ---
 
 ## インタラクション詳細
 
-- タップ / ダブルタップ / トリプルタップ / N クリック
+- タップ / ダブルタップ / トリプルタップ / N クリック（長押し時間はカスタマイズ可）
 - 長押し
-- スワイプ（8方向、ジェスチャーパスデータ取得可能）
-- ハプティックフィードバック
-- 各ジェスチャーで可能な操作: Taskerタスク実行 / シーン閉じる / 結果値返却 / Taskerコマンド送信
+- スワイプ（8方向、`%sv2_swipe_length` / `%sv2_swipe_direction` で詳細取得）
+- ハプティックフィードバック（light click / heavy click / double tap）
+- クリックイベントの伝播防止オプション
+
+### Event Actions（6.7.3 刷新）
+
+1イベントに複数の順序付きアクションを設定可能:
+
+| アクション | 説明 |
+| ---------- | ---- |
+| Set Variable | 変数に値をセット（`%var` 展開対応） |
+| Output to Variable | イベントが生成したデータ（テキスト入力値・スイッチ状態等）を変数に保存 |
+| Toggle Variable | boolean 変数を true/false 反転 |
+| Dismiss Layout | シーンを閉じ、出力変数を呼び出し元に返す |
+| Haptic Feedback | デバイスを振動（light / heavy / double tap） |
+| Run Component Action | 別コンポーネントのアクションを実行（スイッチ切替等）、パラメータ渡し可 |
 
 ---
 
@@ -216,26 +252,33 @@
 | States | コンポーネントの状態管理・変数バインディング（6.7.1 新規） |
 | Events | イベントハンドラ設定（6.7.1 で Interaction タブを置き換え） |
 | Actions | コンポーネントへのアクション設定（6.7.1 新規） |
-| JSON | JSON直接編集（旧 Raw JSON） |
+| JSON | JSON直接編集（旧 Raw JSON）、cut/copy/paste ボタン追加（6.7.3） |
 | AI | 自然言語でのレイアウト生成 |
+| Transitions | コンポーネントの表示/非表示時アニメーション設定（6.7.3 新規） |
 
-> **6.7.0 との違い**: 5タブ（Elements / Properties / Interaction / Raw JSON / AI）→ 8タブに拡張。
-> Interaction タブは廃止され Events / Actions に分割。Elements → Tree、Raw JSON → JSON に改名。
+> **6.7.0 との違い**: 5タブ → 8タブに拡張（6.7.1）→ Transitions タブ追加で9タブに（6.7.3）
 
 ### その他エディター機能
+
+- **Interactive Mode**（6.7.3 新規）— スイッチ切替・変数設定・ShowWhen 確認をエディタ内で直接テスト
 - ライブプレビュー（プレビュー内クリックでツリー選択）
 - Undo/Redo（50スナップショット）
 - 複数選択・コピー/カット/ペースト・インデント/アウトデント・名前変更・タイプ変更・複製
 - **マルチモニター対応** — 最大4ディスプレイにエディターパネルを分散
 - カラーピッカー（HSV + アルファ + hex + M3テーマカラー）
 - アイコンピッカー（Material 3 アイコン検索、プレビュー内タップで選択切替）
-- showWhen プレビュー用テスト変数パネル
+- showWhen プレビュー用テスト変数パネル（オン/オフ切替可、6.7.3）
 - タグ検索（例: "Padding" で "Spacing" を検索）
 - 全コンポーネント・モディファイアにツールチップ
 - インラインシーン構築（Show Scene V2 アクション内で直接）
 - 作成時レイアウトタイプ選択（Scaffold または Column）
 - Scaffold のスロットデフォルトエディター
 - スコープ対応プロパティ（ColumnScope / RowScope 等）
+- **エディタからタスク作成/編集**（6.7.3 新規）— 編集後は同プロジェクト内に保存
+- Size Modifier に **Uniform** オプション追加（幅・高さを同時編集、6.7.3）
+- ファイルシステムから画像ファイルを直接選択可能（6.7.3）
+- コンポーネント削除ボタンをドラッグバーに追加（6.7.3）
+- 特定コンポーネントは専用の親コンポーネント内にのみ追加可能（Segmented Button Item 等）
 
 ---
 

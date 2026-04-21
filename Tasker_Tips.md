@@ -704,6 +704,42 @@ Variable Search Replace の Search フィールドに正規表現を使う場合
 
 ---
 
+## Variable Search Replace の Replace With フィールドのエスケープ解釈
+
+### Replace With フィールドの `\n` / `\\n` の違い
+
+| Replace With に入力 | Tasker が出力する文字列 | 用途 |
+| --- | --- | --- |
+| `\n` | 実際の改行文字（LF） | 改行を挿入したいとき |
+| `\\n` | `\` + `n` の2文字リテラル | JSON の改行エスケープを埋め込みたいとき |
+
+### JSON に改行付き変数を埋め込むパターン（%wk_lf パターン）
+
+Scene V2 の `multiLine: true` TextInput などで取得した変数には実際の改行文字が含まれる。
+JSON 文字列に直接埋め込むと無効な JSON になるため、事前にエスケープが必要。
+
+```text
+Variable Set  %wk_lf = [To フィールドに実際の改行を入力]
+Variable Search Replace
+  Variable: %comment
+  Search:   %wk_lf       ← 実際の改行文字（Regex OFF でも動く）
+  Replace:  \\n          ← JSON の \n エスケープ（2文字リテラル）として出力
+```
+
+### `%wk_lf` vs `¥n` の使い分け
+
+- `%wk_lf`（変数に実際の改行を格納）: フィールドを問わず常に改行文字として振る舞う
+- `¥n` はフィールドによって解釈が異なる:
+  - Search フィールド（Regex ON）→ 改行文字にマッチ
+  - Replace With フィールド → 実際の改行文字を出力（= `%wk_lf` と同じ結果）
+  - Variable Set To フィールド → `¥n` の2文字テキストのまま（改行にならない）
+
+→ Search に `%wk_lf` を使う方が Regex ON/OFF に依存せず安全。
+
+確認バージョン: Tasker 6.7.3-beta
+
+---
+
 ## Custom Setting でシステム設定を読み取る
 
 Custom Setting アクション（code 235）は書き込みだけでなく読み取りにも使える。
