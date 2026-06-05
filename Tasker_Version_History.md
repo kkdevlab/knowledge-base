@@ -1,9 +1,9 @@
 # Tasker バージョン管理
 
-最終更新: 2026-03-26
+最終更新: 2026-06-05
 インストール済み: **6.6.20**
 最新リリース: **6.6.20**（2026/02/24）
-ベータ版: **6.7.1-beta**（Scenes V2 Update 1 — 詳細: `Tasker_ScenesV2_67x-beta.md`）
+ベータ版: **6.7.4-beta**（New Main Screen UI, Scenes V2 Update 3, App Factory Revival — 詳細: `Tasker_ScenesV2_67x-beta.md`）
 
 ---
 
@@ -41,11 +41,13 @@
 | Get Network Data Usage | 期間指定でアプリごとのデータ通信量を取得 | 6.3 |
 | WiFi Tether | Android 16+ では Shizuku 経由で動作可能 | 6.1/6.6 |
 | 5G 対応 | モバイルネットワーク状態で 5G 判定 | 6.1 |
+| Wifi Changed イベント | WiFi 状態が変化したときにトリガー | 6.7.4-beta |
 
 ### UI・ウィジェット
 
 | 機能 | 概要 | 追加 |
 | ------ | ------ | ------ |
+| New Main Screen UI（2026 UI） | タグシステム（プロジェクト代替）・Automations概念・フィルター方式・ライブ実行追跡（opt-in） | 6.7.4-beta |
 | Modern UI | Edit Task 画面の新デザイン（インライン編集、マルチ選択、折りたたみ） | 6.3 |
 | Widget v2 | ビジュアルエディタ付き高カスタマイズウィジェット | 6.4 |
 | Widget v2 強化 | カスタムフォント、円形プログレスバー、画像ブラー、パンくずナビ | 6.5 |
@@ -60,6 +62,7 @@
 | Live Update | ステータスバーにチップ/展開ステータス表示 | 6.6 |
 | Short Critical Text | ステータスバーチップに短縮テキスト表示 | 6.6 |
 | グループ設定 | 通知の整理・分類（Android 16+ で動作変更あり） | 6.6 |
+| SVG アイコン | Notify アクション・クイック設定タイルで SVG を直接使用可能 | 6.7.4-beta |
 
 ### 自動化・コード実行
 
@@ -70,6 +73,8 @@
 | Java コードアクション | 任意の Java コード + Android API を直接実行（AI アシスタント、RxJava2 対応） | 6.6 |
 | Extra Triggers | 外部アプリ（Home、Car、Bixby 等）から Tasker を起動 | 6.6 |
 | Convert Into Task | 複数アクションを自動的に新規タスクに変換 | 6.1 |
+| Test Action ボタン | アクション編集画面から直接テスト実行（設定しながら確認可能） | 6.7.4-beta |
+| Apply ボタン | タスク編集画面でアクションを即時適用 | 6.7.4-beta |
 
 ### 情報取得
 
@@ -100,6 +105,7 @@
 | Receive Share | Tasker を Android の共有先として使用可能 | 6.5 |
 | カレンダー自動化 | イベント・リマインダー・参加者の取得/編集 + Calendar Changed イベント（7アクション） | 6.5 |
 | Google Drive Upload | ファイル形式の自動変換に対応 | 6.0 |
+| App Factory 復活 | Scenes V2 対応・API 35 ターゲット（6.6 で廃止 → 復活） | 6.7.4-beta |
 
 ### アクセシビリティ
 
@@ -128,13 +134,44 @@
 | ------ | ------ |
 | Target API | 35 |
 | 最小 SDK | 24（Android 7.0） |
-| App Factory | **廃止**（将来のアプリ生成は別手段で対応予定） |
+| App Factory | **復活**（6.7.4-beta〜、Scenes V2 対応・API 35）※6.6 で一時廃止 |
 | DND モード切替 | Tasker Settings アプリが必要 |
 | Logcat Entry | Shizuku 経由で制限デバイスでも復活 |
 
 ---
 
 ## 変更履歴
+
+### v6.7.4-beta（2026/06）— New Main Screen UI, Scenes V2 Update 3, App Factory Revival
+
+| 機能 | 概要 |
+| ------ | ------ |
+| **New Main Screen UI**（opt-in） | Tasker → Preferences → UI → Use Tasker 2026 UI で有効化 |
+| タブ廃止 → フィルター方式 | 上下タブが廃止。全アイテムを1リストで表示し、タイプ・タグで絞り込む |
+| タグシステム | プロジェクトの進化版。1アイテムに複数タグ付与可能、AND/OR 検索対応 |
+| Automations | Profile と Task を1画面で編集。コンテキスト追加や Exit Task も UI がガイド |
+| ライブ実行追跡 | 実行中・有効アイテムをリストでリアルタイム表示、直接起動/停止も可能 |
+| 新 Settings 画面 | 動的生成される統一デザインの設定画面 |
+| Scenes V2 Update 3 | Slider / Range Slider / Progress Bar / FlexBox / Camera の新コンポーネント追加（詳細: `Tasker_ScenesV2_67x-beta.md`） |
+| Apply When（Scenes V2） | 全モディファイアに条件付き適用を設定可能（縦横向きで別レイアウト等） |
+| App Factory 復活 | Scenes V2 対応・API 35 ターゲット（6.6 で廃止されたものを復活） |
+| Test Action ボタン | アクション編集画面から直接テスト実行 |
+| Apply ボタン | タスク編集画面でアクションを即時適用 |
+| SVG アイコン | Notify アクション・クイック設定タイルで SVG を直接使用可能 |
+| Wifi Changed イベント | WiFi 状態変化時にトリガー |
+| Shortcut Task Priority | ショートカットタスクの優先度をオプションで設定 |
+| Shizuku クリップボード | Shizuku が有効な場合にクリップボード取得を Shizuku 経由で実行 |
+| Java Code スクリーンショット | Java Code アクションからアクセシビリティサービス経由でスクリーンショット取得 |
+
+**主なバグ修正**:
+
+- Tasker スタートアップ時のクラッシュ修正
+- 多数の Scenes V2 クラッシュ・変数更新・マルチスクリーン問題修正
+- `%DATE` フォーマット関連の修正
+- Out of Memory クラッシュ修正
+- Volume アクションの最大値検出修正
+
+---
 
 ### v6.7.3-beta（2026/04）— Scenes V2 Update 2
 

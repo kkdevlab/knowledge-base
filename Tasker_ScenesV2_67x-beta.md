@@ -3,12 +3,13 @@
 > **注意**: これはベータ版の仕様です。正式版リリース時に変更される可能性があります。
 > 正式版では差分情報のみ公開される可能性があるため、ベータ版の全仕様をここに記録しています。
 
-- **ソース**: Reddit r/tasker 投稿（[DEV] Tasker 6.7.0-beta / 6.7.1-beta Update 1 / 6.7.3-beta Update 2）
+- **ソース**: Reddit r/tasker 投稿（[DEV] Tasker 6.7.0-beta / 6.7.1-beta Update 1 / 6.7.3-beta Update 2 / 6.7.4-beta Update 3）
 - **初版記録日**: 2026-03-13（6.7.0-beta）
-- **更新日**: 2026-04-21（6.7.3-beta Update 2）
+- **更新日**: 2026-06-05（6.7.4-beta Update 3）
 - **デモ動画（6.7.0）**: [youtu.be/SU0pG36GkUo](https://youtu.be/SU0pG36GkUo)
 - **デモ動画（6.7.1）**: [youtu.be/pffxU1p2wlt4](https://youtu.be/pffxU1p2wlt4)
 - **デモ動画（6.7.3）**: [youtu.be/3mId6ekwGuI](https://youtu.be/3mId6ekwGuI)
+- **デモ動画（6.7.4）**: [youtu.be/A-Nk5VyH3RM](https://youtu.be/A-Nk5VyH3RM)
 
 ---
 
@@ -52,6 +53,7 @@
 | Box | スタック型コンテナ |
 | Spacer | 固定ギャップ |
 | Scaffold | 4スロット構成のアプリ構造（topBar/bottomBar/FAB/content） |
+| FlexBox | 縦横を1つで制御できる動的コンテナ（6.7.4 新規） |
 
 ### UI 要素
 | コンポーネント | 説明 |
@@ -74,6 +76,10 @@
 | Segmented Button Item | Segmented Button Row の子要素（6.7.3 新規） |
 | Flow Row | 内容に応じて自動折り返しする横方向コンテナ（6.7.3 新規） |
 | Flow Column | 内容に応じて自動折り返しする縦方向コンテナ（6.7.3 新規） |
+| Slider | スライダー（6.7.4 新規） |
+| Range Slider | 範囲指定スライダー（6.7.4 新規） |
+| Progress Bar | プログレスバー、アニメーション付きオプションあり（6.7.4 新規） |
+| Camera | カメラプレビュー、複数カメラの同時表示対応（6.7.4 新規） |
 
 ### 特殊コンポーネント
 | コンポーネント | 説明 |
@@ -107,6 +113,8 @@
 | WindowDrag | オーバーレイドラッグのアンカー指定 |
 | Blur | ぼかし効果（6.7.1 新規） |
 | Marquee | テキスト等のコンポーネントを自動スクロール表示（iterations / velocity / spacing 設定可）（6.7.3 新規） |
+| Scale | コンポーネントを自由にリサイズ（レイアウトフローに影響しない）（6.7.4 新規） |
+| Apply When | モディファイアに条件を付与し、特定状況でのみ適用（全モディファイア対応）（6.7.4 新規） |
 
 ---
 
@@ -138,6 +146,7 @@
 | Get Scene V2 Element Value | 要素の現在状態を読み取り |
 | Wait For Scene V2 Result | シーンが閉じるまでタスクをブロック |
 | Run Scene V2 Action | コンポーネントのアクションを実行（6.7.1 新規） |
+| Trigger Event | 他コンポーネントのイベント（クリック・長押し等）をプログラムからトリガー（6.7.4 新規） |
 
 **Tasker イベント（6.7.1 追加）**: Scene V2 Event — シーン内コンポーネントの変化で Tasker タスクをトリガー
 
@@ -181,6 +190,7 @@
 
 - 任意コンポーネントに変数式で表示/非表示を設定
 - 比較演算子: `==` `!=` `>` `<` `>=` `<=`
+- 文字列演算子: `contains`（部分一致）、`ccontains`（大文字小文字区別の部分一致）（6.7.4 新規）
 - ブール演算子: `&`（AND） `|`（OR） `!`（NOT）
 - タスク不要 — 完全に宣言的
 
@@ -191,10 +201,12 @@
 - JSON フィールド内に `%var` を記述可能（テキスト/色/表示条件等）
 - グローバル変数はリアルタイムでシーンを自動更新（例: `%WIN`, `%BLUE`, `%BATT`）
 - Update Scene V2 アクション + 変数パススルーでライブ更新
+- **縦横向きで別サイズ/位置を指定可能**（6.7.4 新規）— シーン・オーバーレイの portrait/landscape で異なる設定を適用
 - 環境変数（9種類）:
   - `%sv2_display_width`
   - `%sv2_render_is_portrait`
-  - 他 7種類
+  - `%sv2_display_is_landscape`（旧 `%sv2_display_is_widescreen` から改名 ※6.7.4）
+  - 他 6種類
 
 ---
 
@@ -256,7 +268,7 @@
 | AI | 自然言語でのレイアウト生成 |
 | Transitions | コンポーネントの表示/非表示時アニメーション設定（6.7.3 新規） |
 
-> **6.7.0 との違い**: 5タブ → 8タブに拡張（6.7.1）→ Transitions タブ追加で9タブに（6.7.3）
+> **6.7.0 との違い**: 5タブ → 8タブに拡張（6.7.1）→ Transitions タブ追加で9タブに（6.7.3）→ タブ数変更なし（6.7.4）
 
 ### その他エディター機能
 
@@ -308,6 +320,18 @@
 
 - V1 から V2 に移行できていない機能がある可能性（ユーザーからのフィードバック収集中）
 - コンポーネント・モディファイアは今後追加予定（エンジン安定後）
+
+### WebView コンポーネント（未実装・追加予定）
+
+開発者 joaomgcd が 6.7.0-beta の Reddit スレッドで明言：
+
+> "Not yet! I want to get the 'engine' working just right before I start adding new components. But I'll add the webview as my next component since so many people are requesting it I guess 😅"
+>
+> "After I add the WebView component, most certainly! :D"
+
+- **ソース**: [Reddit r/tasker - DEV Tasker 6.7.0-beta Scenes V2](https://www.reddit.com/r/tasker/comments/1rs0itz/dev_tasker_670beta_scenes_v2/)
+- **現状**: 6.7.3-beta（2026-04-22 確認）時点でまだ未実装
+- WebView が追加されれば HTML/JavaScript/CSS によるカスタム UI が Scene V2 内で実現可能
 
 ---
 
