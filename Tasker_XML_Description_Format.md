@@ -314,6 +314,21 @@ A47: Profile Status [
 | arg0 | Name |
 | arg1 | Set（1=On, 0=Off） |
 
+### Turn On（code 806）
+
+ディスプレイがオフの場合にオンにする。公式ドキュメント: `ah_poke_display.html`
+
+```
+A24: Turn On [
+      Block Time (Check Help): 500 ]
+```
+
+| XML arg | パラメータ名 |
+|---------|-------------|
+| arg0 | Block Time |
+
+※ Block Time (ms) = 画面点灯後に操作をロックする時間。デバイスによって調整が必要。
+
 ---
 
 ## プラグインアクション
