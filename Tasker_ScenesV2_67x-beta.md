@@ -330,7 +330,7 @@
 > "After I add the WebView component, most certainly! :D"
 
 - **ソース**: [Reddit r/tasker - DEV Tasker 6.7.0-beta Scenes V2](https://www.reddit.com/r/tasker/comments/1rs0itz/dev_tasker_670beta_scenes_v2/)
-- **現状**: 6.7.3-beta（2026-04-22 確認）時点でまだ未実装
+- **現状**: 6.7.4-beta（2026-06-05 確認）時点でまだ未実装
 - WebView が追加されれば HTML/JavaScript/CSS によるカスタム UI が Scene V2 内で実現可能
 
 ---
