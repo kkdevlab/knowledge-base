@@ -29,7 +29,7 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 
 | ファイル | 概要 |
 |---|---|
-| Tasker_Tips.md | Tasker の仕様・ノウハウ全般（変数の型・比較演算子 等） |
+| Tasker_Tips.md | Tasker の仕様・ノウハウ全般（変数の型・比較演算子／設定・プロファイル変更時の Enter/Exit 再発火／%WIFII 形式／プロファイル XML 読み方 等） |
 | Tasker_XML_Description_Format.md | Description 疑似コード ↔ XML バックアップの対応表（修正提案の記述用） |
 | Tasker_Version_History.md | バージョン別機能一覧（6.0〜）／インストール・最新・ベータ状況 |
 
