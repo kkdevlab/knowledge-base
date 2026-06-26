@@ -1,9 +1,9 @@
 # Tasker バージョン管理
 
-最終更新: 2026-06-05
-インストール済み: **6.6.20**
+最終更新: 2026-06-16
+インストール済み: **6.7.5-beta**
 最新リリース: **6.6.20**（2026/02/24）
-ベータ版: **6.7.4-beta**（New Main Screen UI, Scenes V2 Update 3, App Factory Revival — 詳細: `Tasker_ScenesV2_67x-beta.md`）
+ベータ版: **6.7.5-beta**（Projects in new UI, JSON Write, 50 QS Tiles, Scenes V2 WebView/Video — 詳細: `Tasker_ScenesV2_67x-beta.md`）
 
 ---
 
@@ -48,6 +48,10 @@
 | 機能 | 概要 | 追加 |
 | ------ | ------ | ------ |
 | New Main Screen UI（2026 UI） | タグシステム（プロジェクト代替）・Automations概念・フィルター方式・ライブ実行追跡（opt-in） | 6.7.4-beta |
+| 新UIにプロジェクト復活 | 新 Main Screen UI にプロジェクトを第一級概念として再導入（左ナビペイン・D&D並べ替え・カラー・項目移動）。タグだけの運用も継続可 | 6.7.5-beta |
+| Scenes V2 WebView | シーン内に HTML/JS/CSS を埋め込み表示（v1 同様、オンライン/オフライン両対応） | 6.7.5-beta |
+| Scenes V2 Video | シーン内に動画プレーヤー。再生制御・状態監視（playing/position 等）対応 | 6.7.5-beta |
+| 50個の動的 QS タイル | 47個の新クイック設定タイル。設定したものだけ表示される動的方式。Clear Quick Setting Tile で消去/再設定で元位置復帰 | 6.7.5-beta |
 | Modern UI | Edit Task 画面の新デザイン（インライン編集、マルチ選択、折りたたみ） | 6.3 |
 | Widget v2 | ビジュアルエディタ付き高カスタマイズウィジェット | 6.4 |
 | Widget v2 強化 | カスタムフォント、円形プログレスバー、画像ブラー、パンくずナビ | 6.5 |
@@ -94,6 +98,8 @@
 | Array Compare | 複数配列の共通要素・差分要素を抽出 | 6.3 |
 | Arrays Merge | 配列の結合（配列内の変数置換にも対応） | 6.6 |
 | JSON エンコーディング | JSON エンコード機能 | 6.5 |
+| JSON ネイティブ書き込み | 変数名のドット記法で JSON 構造を生成（Variable Set/Clear・Array Set/Push/Pop）。中間構造も自動生成 | 6.7.5-beta |
+| Format JSON アクション | JSON の minify / pretty-print（入力変数の上書きオプション付き） | 6.7.5-beta |
 
 ### 外部連携・IoT
 
@@ -141,6 +147,32 @@
 ---
 
 ## 変更履歴
+
+### v6.7.5-beta（2026/06）— Projects in new UI, JSON Write, 50 QS Tiles, Scenes V2 WebView/Video
+
+| 機能 | 概要 |
+| ------ | ------ |
+| **新UIにプロジェクト復活** | 新 Main Screen UI にプロジェクトを第一級概念として再導入。左ナビペインに表示（折りたたみ時も表示）、ドラッグ＆ドロップ並べ替え、検索フィルタ、アクセントカラー、アイテムのプロジェクト間移動（ロングクリック→移動）。不要ならタグだけで運用も可 |
+| Automation のトリガー表示位置変更 | プロファイル編集でコンテキスト（トリガー）が上・アクションが下に。新規作成時はトリガーが折りたたみ「OPTIONAL」セクションに格納 |
+| **JSON ネイティブ書き込み** | 変数名に**ドット記法**を使うだけで JSON 構造を生成。対応アクション: Variable Set / Variable Clear / Array Set / Array Push / Array Pop。例: `%json.address.city` で中間構造も自動生成 |
+| **Format JSON アクション**（新規） | JSON の minify / pretty-print。入力変数の上書きオプション付き |
+| **Scenes V2 WebView**（新規） | シーン内に HTML/JS/CSS を埋め込み表示（オンライン/オフライン両対応） |
+| **Scenes V2 Video**（新規） | シーン内に動画プレーヤー。playing / position / formattedPosition の states、再生制御アクション・イベント対応 |
+| Scenes V2 タップ座標 | タップ系イベント（short/long/multi-tap）でタスクに `%sv2_tap_x` / `%sv2_tap_y` を渡せる |
+| Scenes V2 オーバーレイ拡張 | 画面外への描画、ドラッグで画面外に出たら自動で戻すオプション。各プロパティに (i) 説明ボタン |
+| **50個の動的 QS タイル** | 47個の新クイック設定タイルを追加。設定したものだけ表示される「動的」方式。新アクション **Clear Quick Setting Tile**（無効化で消えるが再設定で元の位置に復帰） |
+| Java Code 拡張 | callTask に priority 追加。`setProfileEnabled(profile, enabled)` / `toggleProfileEnabled(profile)` 追加 |
+| Keep Accessibility Running | 設定にグローバルスイッチ追加 |
+
+**主なバグ修正**:
+
+- 高速トリガー時のメモリ蓄積問題を修正
+- 新 Main Screen UI 追加に伴う複数のクラッシュ修正
+- App Factory アプリで Shizuku が必要なアクションの修正
+- Widget v2 のアプリアイコンベース画像の修正
+- List Dialog の First Visible Index がライトテーマで見えない問題、ダーク/ライト切替時のクラッシュ修正
+
+---
 
 ### v6.7.4-beta（2026/06）— New Main Screen UI, Scenes V2 Update 3, App Factory Revival
 

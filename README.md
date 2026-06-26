@@ -41,7 +41,7 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 |---|---|
 | Tasker_ScenesV2_Official_Manual.md | Scene V2 公式マニュアル ローカル保存版（19セクション・2026-03-18取得） |
 | Tasker_ScenesV2_Manual.md | Scene V2 公式マニュアル（ベータ版記録・6.7.0-beta 時点） |
-| Tasker_ScenesV2_67x-beta.md | 6.7.x-beta の Scenes V2 全仕様（Reddit 由来・6.7.4-beta まで） |
+| Tasker_ScenesV2_67x-beta.md | 6.7.x-beta の Scenes V2 全仕様（Reddit 由来・6.7.5-beta まで） |
 
 ### Tasker（公式ガイド）
 

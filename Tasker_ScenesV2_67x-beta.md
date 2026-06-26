@@ -3,13 +3,14 @@
 > **注意**: これはベータ版の仕様です。正式版リリース時に変更される可能性があります。
 > 正式版では差分情報のみ公開される可能性があるため、ベータ版の全仕様をここに記録しています。
 
-- **ソース**: Reddit r/tasker 投稿（[DEV] Tasker 6.7.0-beta / 6.7.1-beta Update 1 / 6.7.3-beta Update 2 / 6.7.4-beta Update 3）
+- **ソース**: Reddit r/tasker 投稿（[DEV] Tasker 6.7.0-beta / 6.7.1-beta Update 1 / 6.7.3-beta Update 2 / 6.7.4-beta Update 3 / 6.7.5-beta WebView・Video）
 - **初版記録日**: 2026-03-13（6.7.0-beta）
-- **更新日**: 2026-06-05（6.7.4-beta Update 3）
+- **更新日**: 2026-06-16（6.7.5-beta: WebView / Video コンポーネント追加）
 - **デモ動画（6.7.0）**: [youtu.be/SU0pG36GkUo](https://youtu.be/SU0pG36GkUo)
 - **デモ動画（6.7.1）**: [youtu.be/pffxU1p2wlt4](https://youtu.be/pffxU1p2wlt4)
 - **デモ動画（6.7.3）**: [youtu.be/3mId6ekwGuI](https://youtu.be/3mId6ekwGuI)
 - **デモ動画（6.7.4）**: [youtu.be/A-Nk5VyH3RM](https://youtu.be/A-Nk5VyH3RM)
+- **デモ動画（6.7.5 WebView）**: [youtu.be/jGdw6mZH9B8](https://youtu.be/jGdw6mZH9B8) / **（6.7.5 Video）**: [youtu.be/-xIHjZrsUHo](https://youtu.be/-xIHjZrsUHo)
 
 ---
 
@@ -80,6 +81,8 @@
 | Range Slider | 範囲指定スライダー（6.7.4 新規） |
 | Progress Bar | プログレスバー、アニメーション付きオプションあり（6.7.4 新規） |
 | Camera | カメラプレビュー、複数カメラの同時表示対応（6.7.4 新規） |
+| WebView | HTML/JS/CSS を埋め込み表示するWebブラウザ（v1同様、オンライン/オフライン両対応）。シーン全体をWebスクリーン化も可能（6.7.5 新規） |
+| Video | 動画プレーヤー。再生制御アクション + playing / position / formattedPosition の states・events で監視可（6.7.5 新規） |
 
 ### 特殊コンポーネント
 | コンポーネント | 説明 |
@@ -207,6 +210,9 @@
   - `%sv2_render_is_portrait`
   - `%sv2_display_is_landscape`（旧 `%sv2_display_is_widescreen` から改名 ※6.7.4）
   - 他 6種類
+- **タップ座標変数**（6.7.5 新規）— タップ系イベント（short/long/multi-tap）でタスク呼び出し時に渡される:
+  - `%sv2_tap_x` / `%sv2_tap_y`
+- **オーバーレイ拡張**（6.7.5 新規）— 画面外への描画、ドラッグで画面外に出たら自動で画面内に戻すオプション。各プロパティに (i) 説明ボタン追加
 
 ---
 
