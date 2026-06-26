@@ -813,8 +813,23 @@ Chl: 48
 
 - 切断時はこの `CONNECTION` ブロックが無い。
 - SSID だけ欲しいときは `"`（ダブルクォート）で Variable Split して中身を取り出す（クォートが区切りになる）。
-- **接続中 SSID の含有判定**は正規表現の部分一致が簡潔: `%WIFII ~R %target_ssid`（`~R` は部分一致なので `*` で囲まず SSID 変数をそのまま置ける）。SSID に正規表現特殊文字（`.` `(` 等）が入りうる場合は glob `~ *%target_ssid*` に切替。空 SSID での全一致を避けるなら `%target_ssid ~R .`（1文字以上）を AND する。
-- 注意: 接続中 SSID の取得は OS への非同期問い合わせで、Monitor 再起動直後は一時的に未取得になりやすい（特定 SSID 一致の State が一瞬不成立になる一因）。
+- **⚠️ `%WIFII` は非リアルタイム（monitored 変数）**: Prefs→Monitor の WiFi スキャン間隔（既定で分単位）でしか更新されない。**数秒スケールの「今つながっているか」判定には使えない**（古い値が返る）。
+- **現在の接続中 SSID をリアルタイムに取得するには `Test Net`（code 341, Type: Wifi SSID）を使う**。結果変数（例 `%result`）に現在 SSID が入るので `%result ~R %target_ssid` で比較する（`~R` は部分一致＝SSID 変数をそのまま置ける。特殊文字を含むなら glob `~ *%target_ssid*`）。
+- この「monitored 変数は非リアルタイム」は %WIFII に限らず位置・セル・センサー系の組み込み変数すべてに該当する（→ 次節）。
+
+---
+
+## 組み込み変数の更新間隔（monitored 変数は非リアルタイム）
+
+WiFi・位置・セル・センサー系の組み込み（グローバル）変数は「**monitored**」型で、**リアルタイムではなく Prefs→Monitor の間隔でしか更新されない**。バックグラウンドのスキャン頻度に依存するため、タスク内で数秒スケールの「今の状態」を判定する用途には使えない（古い値が返る）。
+
+- **該当する主な変数**: `%WIFII`（WiFi情報）／ `%LOC`・`%LOCN`（GPS・ネットワーク位置）／ `%CELLID`・`%CELLSIG`・`%CELLSRV`（セル）／ `%TETHER` ／ センサー系（`%LIGHT`/`%PRESSURE`/`%TEMP`/`%HUMIDITY`/`%HEART`/`%MFIELD`）等
+- **更新間隔を決める設定**: Prefs → Monitor（例: `Wifi Scan Seconds`＝画面ON時のWiFiスキャン、`Display Off All Checks`＝画面OFF時の全チェック、各 Cell/GPS/Net の間隔）。具体値はバージョン・端末で異なる（数値より「**非リアルタイム**」という性質が重要）。
+- **原則**: リアルタイムの値が必要なら、変数を読まず**能動プローブ・アクション**で都度取得する。
+  - WiFi接続/SSID → `Test Net`（code 341, Type: Wifi SSID）→ 結果変数に現在SSID
+  - 位置・セルも同様に対応する取得/テスト系アクションを使う
+- ロジック分析・新規タスク設計でも「これらの変数は非リアルタイム」を**常に前提**にする。
+- 出典: Tasker 公式 Variables / Location Without Tears（monitored 変数とスキャン間隔）
 
 ---
 
@@ -832,3 +847,47 @@ Chl: 48
 
 - **Enter/Exit の対応は `mid0`/`mid1`（XML）を正とする**。手書きの索引ドキュメントは Enter/Exit を取り違えていることがあるので必ず XML で確認する。
 - 「ある状況で偽トグルしうる State プロファイル」を洗い出すには、`<limit>` が無い（=有効）かつ その状況で active になる State コンテキストだけが候補、という観点で絞り込める。
+
+---
+
+## タグの XML 構造（新UI / 6.7.5-beta で確認）
+
+> **ベータ仕様**: 6.7.5-beta（実機 export で確認、2026-06-17）。正式版で要素名・構造が変わる可能性があるためバージョン付きで記録。
+
+新 Main Screen UI のタグは、XML 上では **「定義」と「参照」が分離**している。
+
+### 定義（ID ↔ 名前 ↔ 色）
+
+フルバックアップ（`backup.xml`）の root 直下に、タグ1個＝`<TaskerTag>` 1要素で集約される。
+
+```xml
+<TaskerTag sr="tags0">
+    <clr>4283072457</clr>   <!-- タグの色（符号なし32bit ARGB 整数） -->
+    <id>357b270b-bc8a-4b7c-966d-81ccc6ba09ae</id>   <!-- タグID（UUID） -->
+    <lbl>All Action</lbl>   <!-- タグ名（ラベル） -->
+</TaskerTag>
+```
+
+### 参照（各アイテム側）
+
+タグを付けたアイテム（`<Task>` 等）は、**タグID を配列で参照するだけ**。名前は持たない。
+
+```xml
+<Task sr="task174">
+    <_arrlst_tagIds0>357b270b-bc8a-4b7c-966d-81ccc6ba09ae</_arrlst_tagIds0>
+    ...
+```
+
+- `_arrlst_<field><index>` は Tasker の**配列リスト**シリアライズ形式。`tagIds` 配列の 0 番目。タグを複数付けると `_arrlst_tagIds0`, `_arrlst_tagIds1`, … と増える。
+- 方向は従来のプロジェクトと**逆**：プロジェクトは `<Project>` 側が `<tids>` で所属タスクIDを列挙（＝容れ物）。タグは各アイテムが自分の所属タグIDを持つ（＝横断ラベル）。
+
+### 含まれる範囲（重要）
+
+| export 種別 | タグ情報 |
+|---|---|
+| 個別 export（`.tsk.xml` 等） | `_arrlst_tagIds{N}`＝**ID 参照のみ**（名前は入らない） |
+| フルバックアップ（`backup.xml`） | `<TaskerTag>` で **ID↔名前↔色の定義**を持つ |
+
+- バックアップ/エクスポートに**タグは含まれる**。
+- 形式は**旧UI/新UIどちらから出しても同じ**（タグはデータモデル側に保存、UI 非依存。旧UIに戻して個別 export してもタグ参照は残る）。
+- 個別 export を別端末へ取り込むと、相手に同 ID のタグが無ければ**名前不明のまま宙に浮く**。開発者が export 時に「タグを外す」ステップを用意したのはこの ID 参照上書き事故を防ぐため。

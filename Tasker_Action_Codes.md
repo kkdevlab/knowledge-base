@@ -29,6 +29,7 @@
 ### ディスプレイ
 | Code | アクション名 | 備考 |
 |------|-------------|------|
+| 348 | Test Display | arg0=Type（`3`=Available Resolution）。結果を `arg2` の変数に格納。Available Resolution は `幅x高さ` 文字列を返す（例: `1080x2400`）→ `x` で Variable Split して使う。`Sub_JSON_Viewer`(V1) で確認（2026-06-19） |
 | 806 | Turn On | ディスプレイがオフの場合にオンにする。Block Time (ms) = 画面点灯後に操作をロックする時間。公式: ah_poke_display.html |
 | 812 | Display Timeout | arg0=Secs, arg1=Mins, arg2=Hours |
 
@@ -135,6 +136,7 @@
 | 331 | Auto-Sync | arg0: 0=Off, 1=On |
 | 332 | GPS | |
 | 340 | Bluetooth Connection | arg1=Action(0=Connect?), arg2=デバイス名, arg3=Timeout秒, `<se>false</se>`=Continue on Error |
+| 341 | Test Net | arg0=Type, arg2=結果格納変数。`arg0=5`=**Wifi SSID**（接続中SSIDを返す）。**能動プローブで即時取得**＝monitored変数 `%WIFII`(間隔更新) と違いリアルタイム。比較は `~R`。`wifi If Test`(id273) で確認（2026-06-16） |
 | 425 | WiFi | |
 | 443 | Media Control | arg0=コマンド番号（5=Play Simulated?）, arg1=Simulate Media Button(1=On), arg2=App |
 | 512 | Status Bar | |
@@ -370,6 +372,20 @@ Variable Section %fname, From: %bkup_fatepos, Length: 8, Store: %filedate
 For %i, 1:10            ← 数値範囲（クォートなし）
 For %item, %array()     ← 配列要素
 ```
+
+---
+
+## Scene V1 アクション（旧シーン）
+
+> Tasker の旧シーン（V1）操作アクション。`Sub_JSON_Viewer`(V1) XML + Description で確認（2026-06-19）。
+> 6.7.x では Scene V2（479〜484）への移行が進んでおり、V1 アクションは旧タスクの読解用。
+
+| Code | アクション名 | 主なパラメータ |
+| ---- | ----------- | ------------ |
+| 47 | Show Scene | arg0=Name, arg1=Display As, arg2/arg3=Horizontal/Vertical Position |
+| 49 | Destroy Scene | arg0=Name。`se`=Continue Task After Error |
+| 51 | Element Text | arg0=Scene Name, arg1=Element, arg3=Text（要素のテキストを設定） |
+| 53 | Element Web Control | arg0=Scene Name, arg1=Element, arg2=Mode（6=Load URL）, arg3=Value（例 `data:text/html;charset=utf-8,...`） |
 
 ---
 
