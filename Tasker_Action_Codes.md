@@ -18,7 +18,7 @@
 | 126 | Return（戻り値あり） |
 | 135 | Goto |
 | 137 | Stop Task（Return・戻り値なし） |
-| 300 | Anchor |
+| 300 | Anchor（GoTo先・タスク先頭ヘッダー用。テキストは label 要素／引数なし） |
 
 ### 待機
 | Code | アクション名 |
