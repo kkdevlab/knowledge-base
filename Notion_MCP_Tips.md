@@ -1,6 +1,6 @@
 # Notion MCP ツール Tips & 注意点
 
-最終更新: 2026-02-14
+最終更新: 2026-07-01
 
 Claude.ai / Claude Code から Notion MCP ツールを使う際のナレッジ集。
 実際の作業で発生したエラーと正しい対処法をまとめる。
@@ -240,6 +240,44 @@ Internal Integration のアクセス権は、設定場所によって DB 移動�
 
 REST API から DB にアクセスする場合は、Integration を**データベースそのもの**に直接設定する。
 親ページ経由の設定だと、ページ整理で DB を移動した際に 404 エラーになるリスクがある。
+
+---
+
+## 10. query_data_sources（SQL）は Business プラン必須 → search で代替
+
+### 症状
+
+`notion-query-data-sources`（SQL モード）でDBを検索すると 400 エラー：
+
+```
+This tool requires a Business plan or higher with Notion AI.
+Upgrade your plan to query data sources
+```
+
+- 単一データソースの SQL / 複数データソース横断 / view モードは **Business プラン以上（Notion AI 付き）** が必要。
+
+### 正解：`notion-search` で代替する
+
+ページIDや行を探すだけなら、`notion-search` に `data_source_url`（`collection://…`）を渡してDB内をセマンティック検索する。
+
+```json
+{
+  "query": "Tasker",
+  "query_type": "internal",
+  "data_source_url": "collection://60bb948d-eecc-4661-bb23-037e14f43f31",
+  "page_size": 5
+}
+```
+
+→ 結果の `id` がページID。relation 設定などに使える。
+
+### 使い分け
+
+| 目的 | 使うツール |
+|------|-----------|
+| DB内のページをキーワードで探す | `notion-search`（`data_source_url` 指定） |
+| DBのスキーマ/プロパティ確認 | `notion-fetch`（DB URL） |
+| SQL 集計・条件抽出・横断 | `notion-query-data-sources`（**Business プラン必須**） |
 
 ---
 
