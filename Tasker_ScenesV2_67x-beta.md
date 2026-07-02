@@ -89,6 +89,9 @@
 |--------------|------|
 | Variable | `%var` の JSON をランタイムでコンポーネントツリーとしてレンダリング（動的UIリスト等） |
 | Placeholder | ランタイム注入スロット（Update Scene V2 アクションで更新） |
+| WebView | HTML/JS/CSS を埋め込み表示（6.7.5 実装）。JS から `Tasker.*` ブリッジでアクション呼出可（6.7.6）。→ 下部「WebView コンポーネント」節 |
+| Video | 動画プレーヤー（6.7.5 実装）。playing / position / formattedPosition の states、再生制御アクション・イベント対応 |
+| ArraysMergeTemplate | Tasker 配列（`%icon`/`%item` 等）を行リストへ動的展開（6.7.6） |
 
 ### スロット概念
 各コンポーネントにスロットがあり、他のコンテンツを配置可能。
@@ -327,17 +330,29 @@
 - V1 から V2 に移行できていない機能がある可能性（ユーザーからのフィードバック収集中）
 - コンポーネント・モディファイアは今後追加予定（エンジン安定後）
 
-### WebView コンポーネント（未実装・追加予定）
+---
 
-開発者 joaomgcd が 6.7.0-beta の Reddit スレッドで明言：
+## WebView コンポーネント（6.7.5 実装済み・6.7.6 で JS ブリッジ拡張）
 
-> "Not yet! I want to get the 'engine' working just right before I start adding new components. But I'll add the webview as my next component since so many people are requesting it I guess 😅"
->
-> "After I add the WebView component, most certainly! :D"
+長らく要望されていた WebView が **6.7.5-beta で実装**され、HTML/JavaScript/CSS によるカスタム UI を Scene V2 内で表示できるようになった（Scenes V1 の WebView と同様、オンライン/オフライン両対応）。Video コンポーネントも同時追加。
 
-- **ソース**: [Reddit r/tasker - DEV Tasker 6.7.0-beta Scenes V2](https://www.reddit.com/r/tasker/comments/1rs0itz/dev_tasker_670beta_scenes_v2/)
-- **現状**: 6.7.4-beta（2026-06-05 確認）時点でまだ未実装
-- WebView が追加されれば HTML/JavaScript/CSS によるカスタム UI が Scene V2 内で実現可能
+- 履歴: 6.7.0-beta 時点では「エンジン安定を優先」で未実装だったが、6.7.5-beta で追加。dev 見解では **AutoTools Webscreens ができることは概ね全部代替可能**
+- コンテンツ指定: `"content"` にインライン HTML 文字列、またはファイルパス（例 `/storage/emulated/0/Tasker/files/html/xxx.html`）
+
+### WebView → Tasker JavaScript ブリッジ（6.7.6）
+
+WebView 内 JS から Tasker アクションを **`Tasker.*`** で直接呼べる。全アクションが Promise を返し `await` 対応。
+
+- タスク: `var started = Tasker.runTask('My Task', { foo: 'bar', '%num': '3' }, 10);`（第3引数=priority）
+- 変数: `Tasker.setVariable("name", value);`（% なし）
+- 出力取得: `const out = await Tasker.runShell({ cmd: '...' }); out.stdout`（出力変数名をキーに持つ）
+- `await Tasker.flash({text})` / `Tasker.vibrate({time})` 等。失敗は JS 例外 → try/catch 可
+- HTML 要素のドラッグハンドル化: CSS クラス `tasker-drag-handle` / `-x` / `-y`
+- Material 3 パレットが CSS 変数（`--tasker-surface` 等）で渡る
+- **呼び出し例・既知バグ（変数伝播など）の詳細は `Tasker_DevNotes_67x-beta.md` A項を参照**
+- 公式: `https://tasker.joaoapps.com/userguide/en/scenes_v2/webview-actions.html`
+
+> 従来 SceneV2 側の `RunTask` イベント（Button 等）とは別系統。WebView 内から任意タイミングで能動的にアクションを叩けるのが強み。
 
 ---
 

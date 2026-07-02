@@ -1,9 +1,9 @@
 # Tasker バージョン管理
 
-最終更新: 2026-06-16
-インストール済み: **6.7.5-beta**
+最終更新: 2026-07-03
+インストール済み: **6.7.6-beta**
 最新リリース: **6.6.20**（2026/02/24）
-ベータ版: **6.7.5-beta**（Projects in new UI, JSON Write, 50 QS Tiles, Scenes V2 WebView/Video — 詳細: `Tasker_ScenesV2_67x-beta.md`）
+ベータ版: **6.7.6-beta**（Inline Projects in new UI, Scenes V2 Update 5 — WebView JS Bridge / Arrays Merge Template, New Runlog Screen, Material Symbols — 詳細: `Tasker_ScenesV2_67x-beta.md` / dev Q&A: `Tasker_DevNotes_67x-beta.md`）
 
 ---
 
@@ -49,6 +49,10 @@
 | ------ | ------ | ------ |
 | New Main Screen UI（2026 UI） | タグシステム（プロジェクト代替）・Automations概念・フィルター方式・ライブ実行追跡（opt-in） | 6.7.4-beta |
 | 新UIにプロジェクト復活 | 新 Main Screen UI にプロジェクトを第一級概念として再導入（左ナビペイン・D&D並べ替え・カラー・項目移動）。タグだけの運用も継続可 | 6.7.5-beta |
+| Inline Projects（新UI） | プロジェクトをサイドバーではなく本体リストにインライン表示（設定切替）。プロジェクト内で Profiles/Tasks/Scenes を複数同時選択・アイコン色で自動色分け | 6.7.6-beta |
+| New Runlog Screen（新UI） | Runlog 画面を刷新。タスクの開始/終了・アクション成否を視覚的に追える（折りたたみ可） | 6.7.6-beta |
+| Material Symbols | アイコンフォントを全体で使用可（プロジェクト/タスク・Notify・QS タイル）。outline=非アクティブ/filled=アクティブの状態表現 | 6.7.6-beta |
+| Scenes V2 WebView JS ブリッジ | WebView 内 JS から Tasker アクションを直接呼出（`Tasker.*`・await 対応） | 6.7.6-beta |
 | Scenes V2 WebView | シーン内に HTML/JS/CSS を埋め込み表示（v1 同様、オンライン/オフライン両対応） | 6.7.5-beta |
 | Scenes V2 Video | シーン内に動画プレーヤー。再生制御・状態監視（playing/position 等）対応 | 6.7.5-beta |
 | 50個の動的 QS タイル | 47個の新クイック設定タイル。設定したものだけ表示される動的方式。Clear Quick Setting Tile で消去/再設定で元位置復帰 | 6.7.5-beta |
@@ -98,8 +102,9 @@
 | Array Compare | 複数配列の共通要素・差分要素を抽出 | 6.3 |
 | Arrays Merge | 配列の結合（配列内の変数置換にも対応） | 6.6 |
 | JSON エンコーディング | JSON エンコード機能 | 6.5 |
-| JSON ネイティブ書き込み | 変数名のドット記法で JSON 構造を生成（Variable Set/Clear・Array Set/Push/Pop）。中間構造も自動生成 | 6.7.5-beta |
+| JSON ネイティブ書き込み | 変数名のドット記法で JSON 構造を生成（Variable Set/Clear・Array Set/Push/Pop、6.7.6 で Multiple Variables Set も対応）。中間構造も自動生成 | 6.7.5-beta |
 | Format JSON アクション | JSON の minify / pretty-print（入力変数の上書きオプション付き） | 6.7.5-beta |
+| Scenes V2 Arrays Merge Template | Tasker 配列を行リストへ動的展開する組込みコンポーネント | 6.7.6-beta |
 
 ### 外部連携・IoT
 
@@ -147,6 +152,37 @@
 ---
 
 ## 変更履歴
+
+### v6.7.6-beta（2026/07）— Inline Projects, Scenes V2 Update 5, New Runlog Screen, Material Symbols
+
+> dev ⇔ ユーザーの確定挙動・回避策・既知バグは `Tasker_DevNotes_67x-beta.md` に別途整理。
+
+| 機能 | 概要 |
+| ------ | ------ |
+| **Inline Projects（新UI）** | プロジェクトをサイドバーではなく本体リストに**インライン表示**する設定を追加。プロジェクト内で Profiles/Tasks/Scenes タブを**複数同時選択**でき、まとめて表示可。プロジェクトはアイコン色で UI 全体を自動色分け。NEW FAB から作成・並べ替え。※dev はサイドバー/inline/collapsible の3案を試行中 |
+| **New Runlog Screen（新UI）** | Runlog 画面を刷新。タスクの開始/終了・各アクションの成否を視覚的に追える。折りたたみ表示も可。機能は従来同等 |
+| **Material Symbols** | アイコンフォントを全体で使用可（プロジェクト/タスクアイコン、**Notify**、**Set up Quick Setting Tile**）。outline=非アクティブ／filled=アクティブの状態表現。QS タイルは状態で自動切替。旧UIでもプロジェクトアイコンが選択状態で塗り分け |
+| **Scenes V2: WebView JS ブリッジ** | WebView 内 JavaScript から Tasker アクションを直接呼べる（`Tasker.*`、`await` 対応）。詳細・例は `Tasker_DevNotes_67x-beta.md` A項 |
+| **Scenes V2: Arrays Merge Template** | Tasker 配列を行リストへ動的展開する組込みコンポーネント（`%icon`/`%item` 等を一括展開） |
+| **Scenes V2: Show When アニメーション** | Show When の表示/非表示切替に Fade / Scale / Slide / Expand のアニメーションを設定可（ダイアログ風ポップアップ等を実現） |
+| **Scenes V2: SVG Crop** | 任意コンポーネントを SVG 形状で切り抜き。**クリック判定も形状に追従**（白い部分は反応しない等） |
+| **Scenes V2: Component Template 保存** | 任意要素を長押し→名前/説明を付けてテンプレート保存し、他シーンで再利用 |
+| Scenes V2: その他 | **Trigger Scene V2 Event** アクション追加／Show When・Apply When に `matches`（Taskerパターン）・`matchesr`（正規表現）／**Variable Clear** イベントアクション／Switch に Thumb スロット（画像・色分け）／WebView に Material 3 全パレット提供／index を **1-based** に統一（従来0-based）/ WebView HTML 要素の**ドラッグハンドル**化（`tasker-drag-handle`系 CSS） |
+| Java Code 拡張 | Run Shell 系関数を追加。`tasker.getImageBuffer()` / `tasker.hasImageBuffer()` 追加 |
+| Multiple Variables Set が JSON 対応 | ドット記法による JSON 書き込みに対応（6.7.5 の JSON ネイティブ書き込みの対象拡大） |
+| Widget V2 | 「Continue Task Immediately」オプション、リスト系フィールドの「Separator」オプション追加 |
+| App 生成 | Tasker からアプリ生成時に**アプリ名を上書き**可能に |
+| 初回起動 | 最初の画面に言語セレクタを追加 |
+
+**主なバグ修正（6.7.5 報告分の解消を含む）**:
+
+- receive intent が 1 つの intent で 2 回発火 / QS タイルが通知シェードを閉じない問題を修正
+- Tasker Preferences から戻ると Wifi Connected 等の exit task が誤発火する問題を修正
+- Shizuku がクリップボード監視を壊す問題、DND が Silent/Vibrate に上書きされる問題を修正
+- wait アクションが stuck になる / HTTP Request 関連で新規タスクを受け付けなくなる状況を修正
+- プロジェクトが同一 id になり得る稀なクラッシュ、多数の Scene V2 クラッシュを修正
+
+---
 
 ### v6.7.5-beta（2026/06）— Projects in new UI, JSON Write, 50 QS Tiles, Scenes V2 WebView/Video
 
@@ -402,3 +438,5 @@
 - [v6.5](https://tasker.joaoapps.com/changes/changes6.5.html)
 - [v6.6](https://tasker.joaoapps.com/changes/changes6.6.html)
 - [公式ブログ](https://joaoapps.com/)
+- [r/tasker 6.7.5-beta スレッド](https://www.reddit.com/r/tasker/comments/1u7d04g/dev_tasker_675beta_projects_in_new_ui_write_json/)
+- [r/tasker 6.7.6-beta スレッド](https://www.reddit.com/r/tasker/comments/1ull0si/dev_tasker_676beta_inline_projects_in_new_ui/)
