@@ -70,7 +70,7 @@ WebView 内の JavaScript から Tasker アクションを直接呼べる `Taske
 
 ## D. SQL Query (code 667) Raw モードの確定挙動
 
-（`Tasker/CLAUDE.md` の「DROP 非対応」トラブルシュートを補強する dev/ユーザー確認）
+（`Tasker/Doc/troubleshoot.md` の「DROP 非対応」トラブルシュートを補強する dev/ユーザー確認）
 
 - Raw モードで **INSERT / UPDATE / DELETE / ALTER** は動作する
 - **CREATE INDEX は `SQLITE_READONLY` で失敗**する（CREATE 系が read/write 接続を開くキーワード判定に入っていない模様）。dev は「regression ではなく新規要望」と確認 → 将来対応待ち
