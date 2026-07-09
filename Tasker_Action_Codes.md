@@ -34,18 +34,19 @@
 | 812 | Display Timeout | arg0=Secs, arg1=Mins, arg2=Hours |
 
 ### 変数操作
-| Code | アクション名 |
-|------|-------------|
-| 545 | Variable Randomize |
-| 547 | Variable Set |
-| 548 | **Flash** |
-| 549 | Variable Clear |
-| 590 | Variable Split |
-| 592 | Variable Join |
-| 595 | Variable Query |
-| 596 | Variable Convert |
-| 597 | Variable Section |
-| 598 | Variable Search Replace |
+| Code | アクション名 | 備考 |
+|------|-------------|------|
+| 488 | Format JSON | arg1=JSON文字列, arg2=Format（"Pretty"等）, arg4=Overwrite Source Variable(1=On)。`Weather (Google).prj.xml` task119/149 で確認（2026-07-04） |
+| 545 | Variable Randomize | |
+| 547 | Variable Set | |
+| 548 | **Flash** | |
+| 549 | Variable Clear | |
+| 590 | Variable Split | |
+| 592 | Variable Join | |
+| 595 | Variable Query | |
+| 596 | Variable Convert | |
+| 597 | Variable Section | |
+| 598 | Variable Search Replace | |
 
 ### タスク呼び出し
 | Code | アクション名 |
@@ -90,6 +91,11 @@
 | 18 | Kill App |
 | 20 | Launch App |
 
+### 位置情報
+| Code | アクション名 | 備考 |
+|------|-------------|------|
+| 366 | Get Location v2 | Timeout(Seconds)・Last Location If Timeout 等。出力変数: `%gl_latitude`/`%gl_longitude`/`%gl_altitude`/`%gl_bearing`/`%gl_satellites`/`%gl_speed`/`%gl_coordinates`/`%gl_map_url` ほか。`Weather (Google).prj.xml` task153/154/155 で確認（2026-07-04） |
+
 ### 通信
 | Code | アクション名 |
 |------|-------------|
@@ -110,14 +116,31 @@
 | Code | アクション名 | 備考 |
 |------|-------------|------|
 | 360 | Input Dialog | 戻り値: `%input`（固定） |
-| 390 | Pick Input Dialog | 戻り値: プレフィックス指定のみ（例: `input` → `%input`）。Type に Color / Directory 等を指定 |
+| 390 | Pick Input Dialog | 戻り値: プレフィックス指定のみ（例: `input` → `%input`）。Type に Color / Directory / File 等を指定 |
+
+#### Pick Input Dialog (390) — XMLパラメータ対応
+
+`Dropbox.prj.xml` / `GV_Manager.prj.xml`（Type: Color/Directory/File）にて確認（2026-07-06）。
+
+| arg | 内容 | 備考 |
+| --- | ---- | ---- |
+| arg0 | Bundle（RELEVANT_VARIABLES） | 出力変数の説明メタ情報。空でも動作する |
+| arg1 | Type | `"File"` / `"Color"` / `"Directory"` / `"FileSystemPicker"` など |
+| arg2 | Title | 自由文字列 |
+| arg3 | Message | 自由文字列 |
+| arg4 | （未確認・空で動作） | |
+| arg5 | Timeout（秒） | `30` |
+
+- **Type: File は拡張子フィルタなし**（どのファイルでも選択可）。実機確認済み（2026-07-06、ユーザー実機テスト）
+- 出力は常に `%input`（プレフィックス変更時の格納先arg位置は未確認）
+- キャンセル時は `%input` が未設定になる。**`If %input Isn't Set`（op13）で判定**する（`GV_Manager.prj.xml` act2 で確認済みの実パターン）
 
 ### ファイル操作
-| Code | アクション名 |
-|------|-------------|
-| 404 | Copy File |
-| 410 | Write File |
-| 417 | Read File |
+| Code | アクション名 | 備考 |
+|------|-------------|------|
+| 404 | Copy File | |
+| 410 | Write File | |
+| 417 | Read File | arg0=ファイルパス, arg1=出力変数（`%var`形式）, arg2=Int（常に0、用途未確認）。`AN LOG表示`等で確認 |
 
 ### システム設定
 | Code | アクション名 | 備考 |
@@ -178,9 +201,21 @@ arg10 Int  Use Global Namespace: 1=On
 | 567 | Calendar Insert |
 
 ### 配列操作
-| Code | アクション名 |
-|------|-------------|
-| 354 | Array Set |
+| Code | アクション名 | 備考 |
+|------|-------------|------|
+| 354 | Array Set | |
+| 393 | Arrays Merge | arg1=Names（対象配列）, Merge Type（"Format"等）, Joiner, Format, Output。`Weather (Google).prj.xml` task151 で確認（2026-07-04） |
+
+---
+
+## タスクレベル属性（アクションコード以外の Task 直下タグ）
+
+| タグ | 意味 | 値 |
+| ---- | ---- | --- |
+| `<pri>` | タスク優先度 | 整数 |
+| `<rty>` | Collision Handling（実行中に再発火した時の挙動） | なし/`0`=Abort New Task（既定）, `1`=Abort Existing Task, `2`=Run Both Together |
+
+> `<rty>` は `<pri>` の直後に置く。既定（Abort New Task）ではタグ自体が出力されない。値は [Taskomater/Tasker-XML-Info](https://github.com/Taskomater/Tasker-XML-Info) で確認（2026-07-02、`DocomoMail_Trigger` の二重発火調査で使用）。
 
 ---
 
@@ -334,6 +369,22 @@ If 等の `<ConditionList>` に複数の `<Condition>` を入れる場合、先�
 | 変数を含む文字列 | `Variable Set %x = %DIR/file_%TIME.txt` | クォートなし（変数が含まれると明白なため） |
 | 数式（Do Maths ON） | `Variable Set %x = (%a + %b * 2)` | 括弧で数式と明示、Do Maths ON を意味する |
 
+### Variable Search Replace (598) — XML パラメータ対応
+
+backup.xml 内の複数実例（7件以上）で **arg2/arg3/arg4=0固定, arg6=1固定** を確認（2026-07-06）。
+これらは実機での標準的なデフォルト設定と考えられる。
+
+| arg | 内容 | 例 |
+| --- | ---- | -- |
+| arg0 | 変数名 | `%var` |
+| arg1 | Search（検索パターン） | `"&"` |
+| arg2 | 不明（実例では常に0） | `0` |
+| arg3 | 不明（実例では常に0） | `0` |
+| arg4 | 不明（実例では常に0） | `0` |
+| arg5 | 不明（実例では常に空） | `""` |
+| arg6 | 不明（実例では常に1） | `1` |
+| arg7 | Replace（置換文字列） | `"&amp;"` |
+
 ### Variable Split / Join
 
 ```text
@@ -407,10 +458,22 @@ For %item, %array()     ← 配列要素
 
 | arg | 内容 | 例 |
 | --- | ---- | -- |
-| arg1 | シーン JSON 文字列 | `{"root":{...},"name":"銭湯設定"}` |
-| arg2 | Screen ID | `"銭湯設定"` |
-| arg3 | Display Mode | `"Dialog"` |
+| arg0 | Bundle（RELEVANT_VARIABLES） | 空でも動作 |
+| arg1 | シーン名 or JSON 文字列 | `"SV2_Webview"` / `{"root":{...},"name":"銭湯設定"}` |
+| arg2 | Screen ID | `"%screen_id"`（空=シーン自身のID） |
+| arg3 | Display Mode | `"Fullscreen"` / `"Dialog"` |
+| arg4 | Overlay Width（Overlay時のみ） | `"50%"` |
+| arg5 | Overlay Height（Overlay時のみ） | `"50%"` |
+| arg6, arg7 | 不明（Fullscreen/Dialogでは空） | `""` |
 | arg8 | Blocking Overlay（1=On） | `1` |
+| arg9〜arg11 | 不明（実例では常に空） | `""` |
+| arg12 | 不明（実例では0） | `0` |
+| arg13 | 不明（実例では0または1） | `0` |
+| arg14 | 不明（実例では0または1） | `1` |
+| arg15 | 不明（実例では常に空） | `""` |
+| arg16 | 不明（tv 6.7.5-beta以降で追加？tv 6.7.3-betaの実例には無し） | `1` |
+
+実機確認元: `Sento_Open.tsk.xml`（tv 6.7.3-beta, arg15まで）、`Sub_Webview.tsk.xml` / `Scene_V2_Action_Code.tsk.xml`（tv 6.7.5-beta, arg16あり）（2026-07-06）
 
 ### Get Scene v2 Element Value (483) — 戻り値
 
@@ -424,6 +487,20 @@ For %item, %array()     ← 配列要素
 - **Element ID を指定して1要素ずつ更新**（Variables のバッチ更新ではない）
 - グローバル変数はシーンに自動反映されるため Update Scene v2 不要
 - ボタン色等のローカル変数更新のみ必要な場合に使用
+
+#### Update Scene v2 (481) — XMLパラメータ対応（単一要素プロパティ更新モード）
+
+`Sub_Webview.tsk.xml` act8/act9 にて確認（2026-07-06）。WebView の `content` プロパティを
+動的に流し込む用途で実際に使われている（本パターンを MD_Preview でも踏襲）。
+
+| arg | 内容 | 例 |
+| --- | ---- | -- |
+| arg0 | Screen ID | `%scene_id` |
+| arg1 | Element ID | `"webview1"` |
+| arg2 | Property名 | `"content"` |
+| arg3 | 値 | `%final_html` |
+| arg4 | 不明（実例では0） | `0` |
+| arg5 | 不明（実例では空） | `""` |
 
 ---
 
@@ -500,6 +577,7 @@ For %item, %array()     ← 配列要素
 | Code | イベント名 | plugintypeid | 変数 |
 | ---- | --------- | ------------ | ---- |
 | 1825107102 | AutoNotification Command Event | IntentCommandEvent | `%ancomm`（コマンド）, `%anpar`（パラメータ）, `%anmessage`（メッセージ） |
+| 1520257414 | AutoNotification (Notification Intercept) Event | IntentInterceptNotificationEvent | `%antitle`（タイトル）, `%antext`（本文）ほか。通知ID/キー系変数（`%anid`/`%ankey` 等）は実機イベント設定の「Variables」タブで要確認。`DocomoMail_Notify`(prof402) で使用 |
 
 ### AutoRemote（com.joaomgcd.autoremote）
 

@@ -13,6 +13,12 @@ AI（Claude.ai / Claude Code 等）と技術資料を共有するためのパブ
 調べ物・問題解決の前に、関連トピックがここにないか確認する。
 raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/<ファイル名>`
 
+### .NET
+
+| ファイル | 概要 |
+|---|---|
+| DotNet_Build_Tips.md | .NET SDK / MSBuild のビルドに関する知見（ApplicationIcon が無言で埋め込まれない stale VBCSCompiler.exe 問題 等） |
+
 ### Notion
 
 | ファイル | 概要 |
@@ -24,6 +30,12 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 | ファイル | 概要 |
 |---|---|
 | SwitchBot_API_Tips.md | SwitchBot Web API v1.1（HMAC-SHA256 認証・レート制限・エンドポイント） |
+
+### Join（joaoapps）
+
+| ファイル | 概要 |
+|---|---|
+| Join_PC_Phone_Relay.md | PC⇄携帯連携と off-LAN コマンド実行の調査記録（Desktop/拡張のアーキテクチャ・Chrome中継・**失敗した手順／誤った前提と訂正**・MV3のハマりどころ・RCE注意・push-receiver-v2 推奨） |
 
 ### Tasker（仕様・ノウハウ）
 
