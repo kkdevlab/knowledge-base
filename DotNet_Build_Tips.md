@@ -49,3 +49,38 @@ static extern uint ExtractIconEx(string file, int index, IntPtr[] large, IntPtr[
 
 - `-p:UseSharedCompilation=false` を付けてビルドすれば共有コンパイラを使わずその場しのぎで回避できるが、根本原因（stale なプロセス）は解消しないため推奨しない。プロセスを kill して正しい状態に戻すのが本質的な解決策。
 - WPF プロジェクト（`net9.0-windows`, `UseWPF=true`）で確認。WinForms・コンソールアプリ等、apphost を使う .NET Core/5+ プロジェクト全般で起こりうる。
+
+---
+
+## dotnet build が MSB3027/MSB3026 で失敗する（ファイルが別プロセスにロックされている）
+
+### 症状
+
+```
+warning MSB3026: "...\apphost.exe" を "bin\...\ProjectName.exe" にコピーできませんでした。1000 ミリ秒以内に 1 回目の再試行を開始します。The process cannot access the file '...\ProjectName.exe' because it is being used by another process. このファイルは "ProjectName (12345)" によってロックされています。
+error MSB3027: ...10 回の再試行回数を超えたため、失敗しました。
+```
+
+### 原因
+
+そのプロジェクトの exe を**前回起動したまま**（バックグラウンドで実行中・監視ループ中・デバッグ実行中断し忘れ 等）になっており、OS がそのファイルへの書き込みロックを保持している。`dotnet build` は出力先の exe に書き込もうとして失敗する。
+
+### 解決方法
+
+エラーメッセージに含まれるプロセスID（例の場合 `12345`）を使って該当プロセスを終了してから再ビルドする。
+
+```powershell
+Get-Process -Id 12345 -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, StartTime
+Stop-Process -Id 12345 -Force
+```
+
+プロセス名で一括終了してもよい（該当exeが1つしか動いていないことを確認してから）:
+
+```powershell
+Get-Process -Name "ProjectName" -ErrorAction SilentlyContinue | Stop-Process -Force
+```
+
+### 注意
+
+- 常駐しない設計の一回実行型ツールでも、デバッグ用の長時間監視モード（例: 10分間待機するバックグラウンド処理）を手動起動して放置していると同じ問題が起きる
+- ビルド前に `dotnet build` を試してこのエラーが出たら、まず「このexeを自分がテスト用に起動しっぱなしにしていないか」を疑う

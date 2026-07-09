@@ -17,7 +17,8 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 
 | ファイル | 概要 |
 |---|---|
-| DotNet_Build_Tips.md | .NET SDK / MSBuild のビルドに関する知見（ApplicationIcon が無言で埋め込まれない stale VBCSCompiler.exe 問題 等） |
+| DotNet_Build_Tips.md | .NET SDK / MSBuild のビルドに関する知見（ApplicationIcon が無言で埋め込まれない stale VBCSCompiler.exe 問題、実行中プロセスによるファイルロックで MSB3027 失敗 等） |
+| NAudio_CoreAudioApi_Tips.md | NAudio（Windows Core Audio API ラッパー）の知見（ドキュメントより先にDLLをリフレクションでAPI確認する手法、`OnSessionCreated`/`OnVolumeNotification`の正しいシグネチャ） |
 
 ### Notion
 
