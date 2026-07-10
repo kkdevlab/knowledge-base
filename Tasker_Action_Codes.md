@@ -360,6 +360,17 @@ If 等の `<ConditionList>` に複数の `<Condition>` を入れる場合、先�
 
 ※ arg4=1 (Append: On) は "To" の値を変数の現在値に**追記**する（Flash.tsk.xml にて確認済み 2026-03-31）
 
+### JavaScriptlet (code 129) — XML パラメータ対応
+
+| arg | 内容 | 値 |
+| --- | ---- | -- |
+| arg0 | Code（JSコード本体） | 文字列 |
+| arg1 | 不明（実例では常に空） | `""` |
+| arg2 | Auto Exit | `0`=Off, `1`=On |
+| arg3 | Timeout (Seconds) | 数値（例 `45`） |
+
+※ `DocomoMailGuard_Recv.tsk.xml`・`Sub_Notify_Ring.tsk.xml`・`Join_Router.tsk.xml` の複数実例で `arg2=1, arg3=45` を確認（2026-07-10）。JS内では `local('name')`/`setLocal('name', value)` で同一タスク内のローカル変数を読み書きできる（`%name` として後続アクションから参照可能）。
+
 ### Variable Set（疑似コード表記）
 
 | パターン | 表記 | 備考 |
