@@ -17,7 +17,7 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 
 | ファイル | 概要 |
 |---|---|
-| DotNet_Build_Tips.md | .NET SDK / MSBuild のビルドに関する知見（ApplicationIcon が無言で埋め込まれない stale VBCSCompiler.exe 問題、実行中プロセスによるファイルロックで MSB3027 失敗 等） |
+| DotNet_Build_Tips.md | .NET SDK / MSBuild のビルドに関する知見（ApplicationIcon が無言で埋め込まれない stale VBCSCompiler.exe 問題、実行中プロセスによるファイルロックで MSB3027 失敗、icon.ico のサイズ不足によるタスクバーのボケ 等） |
 | NAudio_CoreAudioApi_Tips.md | NAudio（Windows Core Audio API ラッパー）の知見（ドキュメントより先にDLLをリフレクションでAPI確認する手法、`OnSessionCreated`/`OnVolumeNotification`の正しいシグネチャ） |
 
 ### Notion
@@ -25,6 +25,12 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 | ファイル | 概要 |
 |---|---|
 | Notion_MCP_Tips.md | Notion MCP ツールのエラーと対処法（multi_select の渡し方 等） |
+
+### Windows
+
+| ファイル | 概要 |
+|---|---|
+| Windows_Explorer_IconCache_Tips.md | アイコンキャッシュクリア・explorer.exe 再起動の知見（Windows 11 で ie4uinit.exe が無い場合の代替手順、Stop-Process -Force 再起動でタスクバーが消えるケースの診断・復旧） |
 
 ### SwitchBot
 

@@ -84,3 +84,29 @@ Get-Process -Name "ProjectName" -ErrorAction SilentlyContinue | Stop-Process -Fo
 
 - 常駐しない設計の一回実行型ツールでも、デバッグ用の長時間監視モード（例: 10分間待機するバックグラウンド処理）を手動起動して放置していると同じ問題が起きる
 - ビルド前に `dotnet build` を試してこのエラーが出たら、まず「このexeを自分がテスト用に起動しっぱなしにしていないか」を疑う
+
+---
+
+## タスクバーでアイコンがボケる（icon.icoのサイズ不足）
+
+### 症状
+
+- exeのアイコンはエクスプローラー等では綺麗に見えるが、タスクバーだけ他アプリより粗く/ボケて見える
+
+### 原因
+
+icon.icoに`16/32/48/256px`など一部サイズしか含まれていない場合、Windowsがタスクバー表示用に要求する`20px`/`24px`に一致するフレームが無く、直近の**小さいサイズ（16px）を引き伸ばして**表示してしまう。
+
+### 診断方法
+
+`System.Drawing.Icon(path, w, h)`コンストラクタ（Explorerのアイコン選択とほぼ同等の挙動）で実際に選択されるフレームサイズを確認できる。
+
+```powershell
+Add-Type -AssemblyName System.Drawing
+$icon = New-Object System.Drawing.Icon($icoPath, 24, 24)
+Write-Output "$($icon.Width)x$($icon.Height)"  # 期待値24と異なれば別サイズにフォールバックしている
+```
+
+### 解決方法
+
+256px等の高解像度ソースから`16, 20, 24, 32, 40, 48, 64, 96, 128, 256`の10サイズをLanczos等の高品質リサンプリングで生成し、icon.icoに含める（小サイズを拡大するのではなく、大サイズから縮小する）。
