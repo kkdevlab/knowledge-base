@@ -1,0 +1,53 @@
+# Gemini API Tips
+
+Google Gemini API (`generativelanguage.googleapis.com`) の generateContent REST呼び出しに関する実地確認済みTips。
+
+---
+
+## 構造化出力（JSON Schema指定）は2方式ある
+
+`generationConfig` 配下に新旧2つの構造化出力指定方法が共存している。
+
+### 方式A: responseFormat（新方式・enum型で厳格）
+
+```json
+"generationConfig": {
+  "responseFormat": {
+    "text": {
+      "mimeType": "APPLICATION_JSON",
+      "schema": { "type": "object", "properties": { ... } }
+    }
+  }
+}
+```
+
+- `mimeType` は **enum**（`MIME_TYPE_UNSPECIFIED` / `APPLICATION_JSON` / `TEXT_PLAIN`）。`"application/json"` のようなMIME文字列を渡すと400エラー（`Invalid value at 'generation_config.response_format.text.mime_type'`）
+- `schema` 配下のtype値は**小文字**（`object`/`array`/`string`/`integer`等）。`anyOf` 等JSON Schema寄りの表現も使える
+
+### 方式B: responseMimeType + responseSchema（旧方式・後方互換として現存、こちらの方が実運用で安定）
+
+```json
+"generationConfig": {
+  "responseMimeType": "application/json",
+  "responseSchema": { "type": "OBJECT", "properties": { ... } }
+}
+```
+
+- `responseMimeType` は素の文字列（`"application/json"`）でよい
+- `responseSchema` のtype値は**大文字enum**（`STRING`/`NUMBER`/`INTEGER`/`BOOLEAN`/`ARRAY`/`OBJECT`）。小文字を渡すとエラーになる
+- 2つの方式でtype値の大文字/小文字ルールが逆になっている点に注意（唯一混同しやすいポイント）
+
+**実運用では方式Bの方がドキュメント通りに素直に動く。方式Aはenum値の取り違えで400エラーになりやすいので、迷ったら方式Bを使う。**
+
+## モデル名は都度 ListModels で確認する
+
+- `gemini-2.5-flash` のように一見現行世代に見えるモデル名でも、**新規発行のAPIキーでは404（"no longer available to new users"）**になることがある（旧世代が新規ユーザーへの提供を先に締め切るケースがある）
+- `GET https://generativelanguage.googleapis.com/v1beta/models`（ヘッダー `x-goog-api-key`）で `supportedGenerationMethods` に `generateContent` を含むモデル一覧を確認してから使うこと
+- エイリアス `gemini-flash-latest` / `gemini-pro-latest` はGoogleが指す実体を随時更新するため、個別モデル名の廃止に振り回されにくい（2026-07時点、`gemini-flash-latest`の実体は`gemini-3.5-flash`）
+
+## 認証
+
+- APIキーは `x-goog-api-key` ヘッダーで渡せる（`?key=`クエリパラメータに書くとログ・URL履歴に残りやすいので、可能ならヘッダー方式を優先）
+
+---
+*(2026-07-12 DocomoMailGuard Gemini版構築時に実地確認)*
