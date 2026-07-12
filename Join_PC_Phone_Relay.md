@@ -176,6 +176,29 @@ Join（joaoapps）で **PC と Android(Tasker) を双方向に連携**させる�
 
 ---
 
+## 8. 2026-07-12: Join Desktop の認証ループ（401 "Loaded user null"）の真因はブラウザの通知許可自動ブロック
+
+- **エラー**: Join Desktopアプリのウィンドウが常に空白のまま。DevToolsコンソールに
+  `Failed to load resource: www.googleapis.com/...userinfo?alt=json 401`、`Loaded user null`、
+  `Showing dialog for N seconds DialogOk` → `Didn't get choice from dialog Timed out` が繰り返し出る。
+  Googleアカウント側でJoinへのアクセスを一度revoke→再連携すると発生しやすい。
+- **原因**: `https://joinjoaomgcd.appspot.com/?settings` のポート連携フロー（General → Join Desktop Port →
+  Port入力 → SAVE）は、完了に**ブラウザの通知許可**を必要とする。Chromiumは同一サイトの許可プロンプトを
+  ユーザーが何度も無視/拒否したと判断すると、**二度とプロンプトを出さず自動でBlock**する仕様がある
+  （コンソールに `Notifications permission has been blocked as the user has ignored the permission
+  prompt several times` と出る）。ブロックされると、アプリ側は許可待ちダイアログを出し続けたまま
+  永遠にタイムアウト→再表示を繰り返し、外見上「Googleログインにループする」ように見える。
+- **正解**: ブラウザのアドレスバー横のサイト情報アイコン（鍵/調整アイコン）→ このサイトの許可設定 →
+  「通知」を Block → Ask/Allow に変更 → ページ再読み込み → 再度 Port(例:9876)を入力してSAVE →
+  今度は通知許可プロンプトが出るので許可 → Googleサインインへ進む。認証成功後は
+  `%APPDATA%\Join Desktop\auth.json` が生成され、アプリのダッシュボードが正常表示される。
+- **注意**: 当初「Googleが廃止した `gapi.auth2` ライブラリのサーバー側実装が原因で修正不可能」と結論したが、
+  これは**誤りだった**（ソースコード調査からの早合点）。ブラウザを変える（Chrome→Edge）と挙動が違ったのが
+  ヒントで、実際は上記のブラウザ側の許可ブロック状態が原因だった。**「ソースを読んで詰んでいる」と結論する前に、
+  別ブラウザで試すなど単純な環境要因を先に切り分けること。**
+
+---
+
 ## 7. 参考
 
 - ソース: `github.com/joaomgcd/JoinDesktop`（Electron Desktop）/ `github.com/joaomgcd/JoinChrome`（拡張）。
