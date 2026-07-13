@@ -31,3 +31,53 @@
       return ,$filtered  # 0件・1件でも呼び出し元は必ず配列として受け取れる
   }
   ```
+
+---
+
+## 2026-07-13: ConvertTo-Json で配列が0件のとき、-AsArrayを付けても$nullになる
+
+- **エラー内容**: `@() | ConvertTo-Json -AsArray` のように要素数0の配列を渡しても、出力が空配列`[]`ではなく`$null`になる
+- **原因**: `ConvertTo-Json`はパイプラインに何も渡されないと本体処理が実行されず、`-AsArray`を付けても救済されない（「1件→オブジェクト化」問題とは別の挙動）
+- **解決方法**: 0件のときは明示的に`'[]'`を代入し、ConvertTo-Jsonを呼ばない
+
+  ```powershell
+  if ($array.Count -eq 0) { $json = '[]' } else { $json = $array | ConvertTo-Json -AsArray }
+  ```
+
+- **備考**: 「1件→オブジェクト化」エントリとセットで扱うこと。`-AsArray`は1件のケースは救うが0件のケースは救わない
+
+---
+
+## 2026-07-13: 名前付きMutexは同一スレッド内で再入可能なため、同一プロセス内の多重起動テストは偽陽性になる
+
+- **エラー内容**: 同一PowerShellセッション内で先に`Mutex.WaitOne(0)`を呼んでから`& script.ps1`を実行すると、スクリプト内の`WaitOne(0)`が成功してしまい多重起動が検知されない
+- **原因**: named Mutexは「スレッド単位」で所有権を持つ。同一スレッドは別のMutexオブジェクトのインスタンス経由でも再取得に成功する（reentrant lock）。`&`はスクリプトを新しいプロセスではなく同一スレッド上で実行する
+- **解決方法**: 多重起動テストは必ず`Start-Process`等で別プロセスにMutexを保持させ、テスト対象は元のプロセスから呼び出す
+
+---
+
+## 2026-07-13: System.Diagnostics.Process の StandardInput は既定でConsole.InputEncoding依存になる
+
+- **エラー内容**: 子プロセス（例: `codex exec`）にプロンプト文字列を`$process.StandardInput.Write($Prompt)`で渡したところ、対話ターミナルから手動実行すると成功するのに、スケジューラ/外部トリガー（Tasker/Join等）経由の非対話起動だと子プロセス側で「invalid byte at offset 0」のような文字化けエラーになる
+- **原因**: `ProcessStartInfo.StandardOutputEncoding`/`StandardErrorEncoding`をUTF-8に指定していても、`StandardInputEncoding`を明示しないと.NETは`Console.InputEncoding`（実行コンテキスト依存のコンソールコードページ）でエンコードする。対話ターミナルではUTF-8相当のことが多いが、非対話バックグラウンド起動ではOS既定コードページ（日本語Windowsだとcp932等）にフォールバックすることがあり、非ASCII文字を送ると子プロセス側でUTF-8として不正なバイト列になる
+- **解決方法**: 標準入力にも明示的にエンコーディングを指定する
+
+  ```powershell
+  $psi.StandardInputEncoding = [System.Text.Encoding]::UTF8
+  ```
+
+- **備考**: `StandardOutputEncoding`/`StandardErrorEncoding`だけ設定して満足しがちだが、stdinへの書き込みがある場合は3つとも揃える必要がある
+
+---
+
+## 2026-07-13: 子プロセスのカレントディレクトリは既定で親プロセスから引き継がれる（ProcessStartInfo.WorkingDirectory未指定時）
+
+- **エラー内容**: `codex exec`をSystem.Diagnostics.Processで起動する際、`WorkingDirectory`を指定しなかったところ、手動でgitリポジトリ内から実行したときは成功するが、Tasker/Join等の外部トリガー経由で起動すると「Not inside a trusted directory and --skip-git-repo-check was not specified.」で失敗する
+- **原因**: `ProcessStartInfo.WorkingDirectory`を指定しないと、子プロセスは親プロセス（PowerShell）のカレントディレクトリをそのまま引き継ぐ。外部トリガー経由だと親プロセスのカレントディレクトリがgit作業ツリー外になりがちで、git作業ツリー内であることを前提とするCLI（codex等）のチェックに失敗する
+- **解決方法**: 呼び出し元のカレントディレクトリに依存させず、明示的に固定する
+
+  ```powershell
+  $psi.WorkingDirectory = $PSScriptRoot  # または既知の固定パス
+  ```
+
+- **備考**: 呼び出し元（スケジューラ・外部トリガー）側で`cd`させる対処もあるが、呼び出し元が増えるたびに同じ対応が必要になるため、子プロセスを起動する側で固定する方が再発防止になる
