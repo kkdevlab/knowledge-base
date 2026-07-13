@@ -5,7 +5,7 @@ r/tasker の [DEV] リリーススレッド（開発者 joaomgcd の直接回答
 - 出典: [6.7.5-beta スレッド](https://www.reddit.com/r/tasker/comments/1u7d04g/dev_tasker_675beta_projects_in_new_ui_write_json/)（クローズ想定・アーカイブ）／ [6.7.6-beta スレッド](https://www.reddit.com/r/tasker/comments/1ull0si/dev_tasker_676beta_inline_projects_in_new_ui/)
 - 変更点そのものの一覧 → `Tasker_Version_History.md`
 - Scene V2 の一般仕様 → `Tasker_ScenesV2_67x-beta.md` / `Tasker_ScenesV2_Official_Manual.md`
-- 最終取得元 JSON: `Tasker/Temp/tasker_675beta.json` / `tasker_676beta.json`（parsed 版あり）
+- 最終取得元 JSON: `Tasker/Doc/tasker_675beta.json` / `tasker_676beta.json`
 
 ---
 
