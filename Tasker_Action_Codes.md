@@ -139,7 +139,7 @@
 | Code | アクション名 | 備考 |
 |------|-------------|------|
 | 404 | Copy File | |
-| 410 | Write File | |
+| 410 | Write File | arg0=ファイルパス, arg1=書き込むテキスト, arg2=Int（Add=追記/1でON。0だと上書きと推測・未確認）, arg3=Int（Add Newline=末尾改行/1でON）。`DocomoMail_Trigger`/`Join_Router`のデバッグログ出力で使用実績あり |
 | 417 | Read File | arg0=ファイルパス, arg1=出力変数（`%var`形式）, arg2=Int（常に0、用途未確認）。`AN LOG表示`等で確認 |
 
 ### システム設定
