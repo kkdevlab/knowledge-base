@@ -81,3 +81,21 @@
   ```
 
 - **備考**: 呼び出し元（スケジューラ・外部トリガー）側で`cd`させる対処もあるが、呼び出し元が増えるたびに同じ対応が必要になるため、子プロセスを起動する側で固定する方が再発防止になる
+
+---
+
+## 2026-07-14: Windows PowerShell 5.1でBOMなしUTF-8スクリプトが文字化けし構文エラーになる
+
+- **エラー内容**: Windowsタスクスケジューラで`powershell.exe`（Windows PowerShell 5.1）を実行エンジンに指定すると、日本語の文字列リテラルを含むスクリプトが構文エラーになり、実行前に失敗する（タスクの`LastTaskResult=1`、スクリプト側のログ出力すら残らない）
+- **原因**: スクリプトファイルがBOMなしUTF-8で保存されており、かつ実行環境の既定コードページが日本語（Shift-JIS）の場合、Windows PowerShell 5.1はBOMなしスクリプトをUTF-8ではなくシステムの既定コードページとして読み込む。マルチバイト文字（日本語）がShift-JISとして誤読され、文字列リテラルの閉じクォート位置がずれて構文エラーになる
+- **解決方法**: スクリプトの実行には`pwsh.exe`（PowerShell 7系）を明示的に使う。PowerShell 7はBOMの有無に関わらずスクリプトファイルをUTF-8として読み込むため、この問題が起きない
+
+  ```powershell
+  # NG: Windows PowerShell 5.1（コードページ依存）
+  powershell.exe -File "C:\path\to\script.ps1"
+
+  # OK: PowerShell 7系（常にUTF-8として読み込む）
+  "C:\Program Files\PowerShell\7\pwsh.exe" -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\script.ps1"
+  ```
+
+- **備考**: Windowsタスクスケジューラでスクリプトを登録する際、`Execute`欄が既定で`powershell.exe`になっているケースがあるため要注意。日本語コメント・文字列を含むBOMなしUTF-8スクリプトを外部トリガー（タスクスケジューラ・他言語からの呼び出し等）から実行する場合は、実行エンジンが5.1系でないか必ず確認する
