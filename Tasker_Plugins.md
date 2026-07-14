@@ -1,6 +1,6 @@
 # Tasker 主要プラグイン一覧（joaomgcd系 + join）
 
-最終更新: 2026-07-07
+最終更新: 2026-07-13
 
 Tasker 本体を拡張する代表的なプラグイン群（開発者 joaomgcd の Auto シリーズ + join）の機能まとめ。公式サイト（joaoapps.com）の記載に基づく汎用情報。プロジェクトごとの導入状況・パッケージ名の実機確認結果は各プロジェクトの `CLAUDE.md` 側に記録する。
 
@@ -21,6 +21,19 @@ Tasker 本体を拡張する代表的なプラグイン群（開発者 joaomgcd 
 | AutoRemote | com.joaomgcd.autoremote | PC/ブラウザ/他端末とのメッセージ送受信によるリモート制御、URL共有、リモート通知表示 |
 | AutoShare | com.joaomgcd.autoshare | Android共有メニューから受けたテキスト/ファイルをTaskerで加工し呼び出し元へ返却（Direct Share対応） |
 | join | com.joaomgcd.join | 通知同期・SMS送受信・クリップボード共有・ファイル転送・リモートページ表示（Chrome拡張版・デスクトップ版含む） |
+
+---
+
+## AutoInput Actions v2（3.0系で追加）
+
+AutoInput 3.0（2023-03-31正式リリース）で追加された新しいTaskerアクション。従来の「AutoInput Action」を1つずつ積む方式に代わり、**複数のUI自動操作を1つのTaskerアクション内に列挙して実行**できる（開発者joaomgcd本人によるRedditの[DEVスレ1（2.8.2-betaで先行公開）](https://www.reddit.com/r/tasker/comments/10ecwbu/dev_autoinput_282beta_autoinput_actions_v2_more/)・[DEVスレ2（正式リリース）](https://www.reddit.com/r/tasker/comments/127f5so/dev_autoinput_actions_v2_single_action_total_ui/)、および[公式ブログ](https://joaoapps.com/autoinput-actions-v2-single-action-total-ui-automation/)より）。
+
+- **対応アクション**: Click / Long Click / Click With Duration / Multi Click / Click All / Swipe / Pinch / Set Text / Append Text / Paste Text From Clipboard / Submit Input / Open App / Wait / Back / Back Out Of App / Wait For Element
+- **専用ヘルパー**: 画面上に十字カーソルを置いて対象要素を指定するオーバーレイ式（旧: 通知ベース）。同座標に複数要素がある場合は選択式
+- **V1との違い**: ゼロから再設計されており「より速く正確」（開発者コメント）。**既存タスクが正常に動いているならv2への作り直しは不要**（整理目的でない限り）
+- **既知の制限**: 2本指同時スワイプは非対応（Gesturesアクションで代替）。Write系は常にクリップボード経由（V1と同様）
+- **Shizukuとの関係**: Accessibility Serviceのみで動作し、Shizukuは不要（開発者が明言）
+- **既知の不具合（SNS報告）**: Android 16環境でシステム設定アプリの「Clear cache」ボタン等がAccessibility経由でクリック不能になる事例あり。回避策は `Tasker/Doc/troubleshoot.md`（2026-07-13）参照
 
 ---
 

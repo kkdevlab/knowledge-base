@@ -147,7 +147,7 @@
 |------|-------------|------|
 | 62 | Vibrate Pattern | arg0=パターン文字列（例: "500,1000,500"）, arg1=空 |
 | 113 | WiFi Tether (Hotspot) | arg0: 0=Off, 1=On |
-| 192 | Play Ringtone | |
+| 192 | Play Ringtone | arg0=Type(1=Ringtone), arg1=Sound（例: "Notification"）, arg2=Stream（5=Notification） |
 | 235 | Custom Setting | |
 | 294 | Bluetooth | arg0: 0=Off, 1=On |
 | 303 | Alarm Volume | arg0=音量レベル（0〜15）|
@@ -624,6 +624,7 @@ For %item, %array()     ← 配列要素
 | Code | アクション名 | plugintypeid |
 | ---- | ----------- | ------------ |
 | 864692752 | Join Query Devices | IntentQueryDevices |
+| 1668911626 | Join Push Received（Event） | IntentReceivedPush |
 
 ### Tasker SQLite Plugin（com.jordanhotmann.taskersqliteplugin）
 
