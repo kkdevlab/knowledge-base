@@ -99,3 +99,17 @@
   ```
 
 - **備考**: Windowsタスクスケジューラでスクリプトを登録する際、`Execute`欄が既定で`powershell.exe`になっているケースがあるため要注意。日本語コメント・文字列を含むBOMなしUTF-8スクリプトを外部トリガー（タスクスケジューラ・他言語からの呼び出し等）から実行する場合は、実行エンジンが5.1系でないか必ず確認する
+
+---
+
+## 2026-07-15: タスクスケジューラーでpwshのコンソールウィンドウを非表示にする
+
+- **内容**: Windowsタスクスケジューラーのアクションで`pwsh.exe`（PowerShell 7）を直接呼び出すと、実行時にコンソールウィンドウが表示される
+- **解決方法**: Argumentsの先頭に`-WindowStyle Hidden`（短縮形`-w Hidden`）を追加する
+
+  ```text
+  -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\script.ps1"
+  ```
+
+- **確認方法**: `pwsh.exe -?` で `-WindowStyle | -w` オプションの存在を確認できる
+- **備考**: `.ps1`ファイル自体の変更は不要。既存タスクは`Set-ScheduledTaskAction`でActionのArgumentsを更新すればよい
