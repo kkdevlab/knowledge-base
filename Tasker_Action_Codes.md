@@ -403,6 +403,20 @@ Variable Split %labels, Splitter: ";"      ← 区切り文字はクォートあ
 Variable Join  %arr, Joiner: ","
 ```
 
+#### Variable Split (590) — XMLパラメータ対応
+
+`Sub_JSON_Viewer.tsk.xml`（%res を "x" で分割）と `MD_Preview_Launcher.tsk.xml`（%input を "/" で分割、2026-07-15追加）で確認。
+
+| arg | 内容 | 例 |
+| --- | ---- | -- |
+| arg0 | 変数名 | `%res` |
+| arg1 | Splitter（区切り文字） | `"x"`, `"/"` |
+| arg2 | 不明（実例では常に0） | `0` |
+| arg3 | 不明（実例では常に0） | `0` |
+
+分割結果は `%var(1)`, `%var(2)`, ... と `%var(#)`（要素数）で参照する（`Sub_JSON_Viewer.tsk.xml` の `%res(1)` 等で確認済み）。
+**未確認**: 配列末尾要素を `%var(%var(#))` のように入れ子で参照する記法（`MD_Preview_Launcher` v1.2 で採用したが実機未検証）。
+
 ### Variable Add / Subtract
 
 常に数値演算のため、クォートなし。
