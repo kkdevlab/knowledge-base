@@ -935,3 +935,35 @@ AutoNotification で「呼び出し元/カテゴリごとに別グループの�
 - サマリー無しの単体通知（GroupKey はあるがサマリー無し）は Android の自動集約に入る（＝複数あると1箱にまとまる）。
 - サマリー表示・折りたたみの細部は機種／Android バージョン差あり。実機確認前提。
 - 実装リファレンス: `Tasker/Doc/Sub_Notify_Ring_仕様.md`（共通サブでの自動サマリー実装）
+
+---
+
+## Scene V2 Raw JSON（`<lj>`タグ）をCLIでデコード/エンコードする方法
+
+`.scn.xml` の `<lj>` タグはシーンのレイアウトJSONを **gzip圧縮→base64エンコード** した文字列。Taskerアプリを開かずにPC上でシーン構造を確認・編集したい場合、PowerShellで直接デコード/エンコードできる。
+
+デコード:
+
+```powershell
+$b64 = "<lj>タグの中身>"
+$bytes = [Convert]::FromBase64String($b64)
+$ms = New-Object System.IO.MemoryStream(,$bytes)
+$gzip = New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Decompress)
+$reader = New-Object System.IO.StreamReader($gzip)
+$reader.ReadToEnd()
+```
+
+エンコード（JSON文字列 → `<lj>`用base64）:
+
+```powershell
+$json = '{"root":{...}}'
+$bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+$ms = New-Object System.IO.MemoryStream
+$gzip = New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Compress, $true)
+$gzip.Write($bytes, 0, $bytes.Length)
+$gzip.Close()
+[Convert]::ToBase64String($ms.ToArray())
+```
+
+- 変更後は必ずデコードして元のJSONと意図した差分だけになっているか確認してからXMLに書き戻す
+- `cdate`/`edate`等の他フィールドは通常のXMLテキストなので直接編集でよい
