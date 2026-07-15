@@ -186,3 +186,12 @@ Tasker 利用中に遭遇したエラー・警告の解決記録（汎用的な�
   ```
 
 - **備考**: 「配列の最後の要素を取る」目的でこのイディオムを使っているタスクは同様の不具合の可能性あり。実機（6.7.6-beta）で確認
+
+---
+
+## 2026-07-15: Update Scene v2 の Element ID は大文字小文字を区別する（case-sensitive）
+
+- **症状**: Show Scene v2 → Update Scene v2 で WebView の `content` にHTMLを流し込んでいるが、画面には何も反映されない（エラーも出ない、ただ更新前の状態のまま）
+- **原因**: シーン側のWebView要素の実際のID（`sv2_helpers.js` の `webviewScene()` で既定値 `webview1`＝全小文字）と、タスク側の Update Scene v2 アクションで指定した Element ID（`WebView1` のように大文字混じり）が一致していなかった。Element ID の照合は大文字小文字を区別するため、綴りが一致していても大小文字が違うだけで対象要素が見つからず更新が無視される
+- **解決方法**: シーン作成時に使ったElement IDと、タスク側 Update Scene v2 の Element 指定を完全一致（大文字小文字含む）させる。`SV2_Webview` 標準シーンを使う場合は必ず小文字 `webview1` を指定する
+- **実機確認**: `Reddit_Tasker_Display.tsk.xml`（Tasker 6.7.6-beta）で `WebView1`→`webview1` に修正後、タイトルバー表示・✕での閉じる動作とも正常化を確認（2026-07-15）
