@@ -13,3 +13,28 @@
 - **原因**: `org.json`はAndroidランタイムには標準搭載されているが、ローカルJVM上のUnitTestが参照する`android.jar`側は実体を持たないスタブになっている。
 - **解決方法**: `testImplementation("org.json:json:<version>")`のように実体jarをテストのみに追加する（実装依存には加えない。実行時はAndroid標準搭載のもので上書きされる）。
 - **備考**: 同様の罠は`android.util.Base64`等でも起きるため、その場合は`java.util.Base64`（Java標準、Android API 26+で利用可）等プラットフォーム非依存の代替を使うとローカルUnitTestでもそのまま動く。
+
+## 2026-07-16: EncryptedSharedPreferences（androidx.security:security-crypto）は非推奨・安定版なし
+
+- **エラー内容**: 該当なし（要件定義書に明記された保存方式が実装時点で技術的に陳腐化していると判明したケース）
+- **原因**: `androidx.security:security-crypto`は2025年4月リリースの`1.1.0-alpha07`でGoogleにより非推奨化されており、2026年7月時点でも安定版（stable）が存在しない。Google公式の推奨移行先は「Jetpack DataStore + Tink」。
+- **解決方法**: `androidx.datastore:datastore-preferences`（2026年7月時点stable: 1.2.1）でPreferencesを保存し、値は`com.google.crypto.tink:tink-android`（同stable: 1.22.0）のAEADで暗号化してから書き込む。
+- **備考**: 新規プロジェクトの要件定義・設計時にEncryptedSharedPreferencesを指定する前に、非推奨化状況をWeb検索で確認すること。
+
+## 2026-07-16: Tink AndroidKeysetManagerの現行API（KeyTemplates.get、getPrimitive(Class)は非推奨だが動作する）
+
+- **エラー内容**: `compileDebugKotlin`で`'fun <P : Any!> getPrimitive(targetClassObject: Class<P!>!): P!' is deprecated.`という警告（エラーではない）
+- **原因**: Tink 1.22.0時点で`KeysetHandle.getPrimitive(Class)`は非推奨（代替は`getPrimitive(Configuration, Class)`）だが、後方互換のため引き続き機能する。また鍵テンプレート取得も旧`com.google.crypto.tink.aead.AeadKeyTemplates`ではなく`com.google.crypto.tink.KeyTemplates.get("AES256_GCM")`を使うのが現行API。
+- **解決方法**:
+
+  ```kotlin
+  AeadConfig.register()
+  val keysetManager = AndroidKeysetManager.Builder()
+      .withSharedPref(context, keysetName, prefFileName)
+      .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
+      .withMasterKeyUri("android-keystore://$alias")
+      .build()
+  val aead = keysetManager.keysetHandle.getPrimitive(Aead::class.java)
+  ```
+
+- **備考**: 非推奨警告はビルドを失敗させないため無視して問題ない。Android Keystore連携は実機（API 23+）でのみ動作し、JVM単体テストでは検証できない。
