@@ -189,6 +189,15 @@ Tasker 利用中に遭遇したエラー・警告の解決記録（汎用的な�
 
 ---
 
+## 2026-07-16: Tasker「Missing Permissions（特殊なADBコマンドが必要）」ダイアログはShizukuアプリの起動で解消する場合がある
+
+- **症状**: 新規プロファイル作成時などに「For Tasker to perform the configured functions you need to use a special ADB command that must be performed every time you reboot your phone. Want to learn how to grant it?」という "Missing Permissions" ダイアログが出る
+- **原因**: TaskerはWRITE_SECURE_SETTINGS等、通常のAndroid権限ダイアログでは付与できない特殊権限をShizuku経由（ADBレベルの権限をrootなしで委譲する仕組み）で取得する設計になっている。Shizukuアプリ自体が起動していないとTaskerはこの権限を取得できず警告を出す
+- **解決方法**: 対象端末でShizukuアプリを起動する（サービスが起動していることを確認する）。起動後は同じダイアログが表示されなくなる
+- **備考**: 実機確認（Android 16、DocomoMailGuardAndroidのTaskerプロファイル作成時、2026-07-16）。Shizuku自体の常駐設定（自動起動等）は別途検討の余地あり
+
+---
+
 ## 2026-07-15: Update Scene v2 の Element ID は大文字小文字を区別する（case-sensitive）
 
 - **症状**: Show Scene v2 → Update Scene v2 で WebView の `content` にHTMLを流し込んでいるが、画面には何も反映されない（エラーも出ない、ただ更新前の状態のまま）

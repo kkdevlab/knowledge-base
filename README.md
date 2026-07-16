@@ -40,6 +40,12 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 | Google_Cloud_OAuth_Tips.md | Google Cloud OAuth同意画面の設定・失効回避に関する知見 |
 | Google_Drive_API_Tips.md | Google Drive API の知見（認証なしで直接ダウンロードできるURL形式・共有設定の単位） |
 
+### Email / セキュリティ
+
+| ファイル | 概要 |
+|---|---|
+| Email_Header_Spoofing_Tips.md | メールヘッダーの偽装手口・検出Tips（Unicode双方向テキスト制御文字によるFrom表示名偽装と軽量な検出方法） |
+
 ### SwitchBot
 
 | ファイル | 概要 |
