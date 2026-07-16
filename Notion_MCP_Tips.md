@@ -299,6 +299,37 @@ Upgrade your plan to query data sources
 
 ---
 
+## 12. ALTER COLUMN SET SELECT で既存オプションの色を変えるとエラー
+
+### 症状
+
+`notion-update-data-source` の `ALTER COLUMN "プロパティ名" SET SELECT(...)` で新しいオプションを追加する際、既存オプション名を全て含めていても、現在の色と異なる色（例: 適当に`default`を指定）を書くとエラーになる:
+
+```
+Cannot update color of select with name: Tasker.
+```
+
+### 原因
+
+`ALTER COLUMN SET SELECT(...)` は「オプション一覧の完全な置き換え」として扱われるため、既存オプションの色を1つでも現在の値と違えると「色の変更」とみなされ拒否される。
+
+### 正しい手順
+
+1. 先に `notion-fetch` で対象データソースのスキーマを取得し、既存オプションの `color` を確認する
+2. `ALTER COLUMN SET SELECT(...)` には、既存オプションを**現在と同じ色**で全て含め、新規オプションのみ好きな色を指定する
+
+```json
+// 例: 既存 Tasker(pink)/Windows(blue)/... に Android(brown) を追加
+{
+  "data_source_id": "xxxxx",
+  "statements": "ALTER COLUMN \"対象\" SET SELECT('Tasker':pink, 'Windows':blue, 'Android':brown)"
+}
+```
+
+**教訓**: 未登録オプション追加時は「先にfetchで現在の色を確認」を徹底する（項目2の「既存オプションも全て含める」に加えて、色も完全一致させる必要がある）。
+
+---
+
 ## まとめ: データ操作の安全な手順
 
 ```
