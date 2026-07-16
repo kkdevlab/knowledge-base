@@ -38,3 +38,10 @@
   ```
 
 - **備考**: 非推奨警告はビルドを失敗させないため無視して問題ない。Android Keystore連携は実機（API 23+）でのみ動作し、JVM単体テストでは検証できない。
+
+## 2026-07-16: Kotlin DSL（build.gradle.kts）の`defaultConfig{}`ブロック内で`java.text.*`等の完全修飾参照が`Unresolved reference`になる
+
+- **エラー内容**: `e: Unresolved reference 'text'.`（`java.text.SimpleDateFormat`の`text`部分）、`e: Unresolved reference 'util'.`（`java.util.Date`の`util`部分）
+- **原因**: Android Gradle PluginのDSLブロック（`defaultConfig{}`等）内では、トップレベルの`java`パッケージ参照がAGP側のプロパティ/レシーバーに解決されてしまい、`java.text.X`のような完全修飾参照が期待通りに機能しないことがある
+- **解決方法**: ファイル冒頭で`import java.text.SimpleDateFormat`・`import java.util.Date`のように明示的にimportし、ブロック内では`SimpleDateFormat(...)`のように完全修飾せず使う
+- **備考**: `buildConfigField`で動的な値（ビルド時刻等）を埋め込む場合など、`defaultConfig{}`内でJava標準クラスを直接呼びたい場面で発生しやすい

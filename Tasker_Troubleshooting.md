@@ -204,3 +204,21 @@ Tasker 利用中に遭遇したエラー・警告の解決記録（汎用的な�
 - **原因**: シーン側のWebView要素の実際のID（`sv2_helpers.js` の `webviewScene()` で既定値 `webview1`＝全小文字）と、タスク側の Update Scene v2 アクションで指定した Element ID（`WebView1` のように大文字混じり）が一致していなかった。Element ID の照合は大文字小文字を区別するため、綴りが一致していても大小文字が違うだけで対象要素が見つからず更新が無視される
 - **解決方法**: シーン作成時に使ったElement IDと、タスク側 Update Scene v2 の Element 指定を完全一致（大文字小文字含む）させる。`SV2_Webview` 標準シーンを使う場合は必ず小文字 `webview1` を指定する
 - **実機確認**: `Reddit_Tasker_Display.tsk.xml`（Tasker 6.7.6-beta）で `WebView1`→`webview1` に修正後、タイトルバー表示・✕での閉じる動作とも正常化を確認（2026-07-15）
+
+---
+
+## 2026-07-16: Profile単体のXML（Task定義を含まない）はインポートでエラーになる
+
+- **症状**: `<TaskerData><Profile>...</Profile></TaskerData>`のみ（リンク先の`<Task>`を含まない）で構成したXMLファイルをTaskerにインポートしようとするとエラーになる。リンク先のTaskを事前に単体でインポート済みでも解消しない
+- **原因**: TaskerのProfileインポートは、そのXML単体で`mid0`が参照するTaskまで解決できる必要がある。実機で正常にエクスポートされたProfile XMLは必ず`<Profile>`と`<Task>`が同じ`<TaskerData>`直下に同居しており、Profile単体（Taskを含まない）でのエクスポート・インポートは想定されていない
+- **解決方法**: Profile用のXMLには、リンク先Taskの完全な定義を同じファイル内に埋め込む（`<TaskerData><Profile>...</Profile><Task>...</Task></TaskerData>`の形にする）
+- **備考**: Taskを単体の`.tsk.xml`として別管理する場合でも、Profile用の`.prf.xml`側には同じTask定義を複製して埋め込む必要がある。実機で正常エクスポートされたProfile XML（Profile+Task同居）と比較して特定した
+
+---
+
+## 2026-07-16: Intent Receivedで自動変数化されるExtraの識別子名と、JavaScriptlet内の`let`宣言が衝突する
+
+- **症状**: `JavaScriptlet: line 1: Uncaught SyntaxError: Identifier 'x' has already been declared`（xはIntentのExtraキー名を小文字化したもの）。グラフィカルRun Logでは「Err」としか表示されず、詳細メッセージはタスク/プロファイル一覧画面を開いた状態でエラーが起きたときにのみポップアップ表示される
+- **原因**: Intent Received（Event）で自動変数化されるExtraキー名（例: extraキー`success`→ローカル変数`%success`）は、JavaScriptlet内でも同名のbare識別子として自動的にJSスコープへバインド済みになっている。この状態で`let x = ...`のように同名で再宣言すると通常のJS構文エラーになる
+- **解決方法**: Extraキー名と衝突する名前で`let`/`const`宣言しない。別名の変数に読み替えて使う（例: `success`→`isSuccess`）。オプショナルなExtra（送られないこともある値）は`typeof x !== "undefined"`で存在確認してから参照する
+- **備考**: Extraキー名の変数化ルール（全て小文字化・3文字未満は`var_`前置・英数字以外は`_`に変換等）は[公式ドキュメント](https://tasker.joaoapps.com/userguide/en/intents.html)を参照

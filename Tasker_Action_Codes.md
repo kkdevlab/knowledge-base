@@ -97,13 +97,14 @@
 | 366 | Get Location v2 | Timeout(Seconds)・Last Location If Timeout 等。出力変数: `%gl_latitude`/`%gl_longitude`/`%gl_altitude`/`%gl_bearing`/`%gl_satellites`/`%gl_speed`/`%gl_coordinates`/`%gl_map_url` ほか。`Weather (Google).prj.xml` task153/154/155 で確認（2026-07-04） |
 
 ### 通信
-| Code | アクション名 |
-|------|-------------|
-| 41 | Send SMS |
-| 90 | Call |
-| 116 | HTTP Post |
-| 118 | HTTP Get |
-| 339 | HTTP Request |
+| Code | アクション名 | 備考 |
+|------|-------------|------|
+| 41 | Send SMS | |
+| 90 | Call | |
+| 116 | HTTP Post | |
+| 118 | HTTP Get | |
+| 339 | HTTP Request | |
+| 877 | Send Intent | 実機XML（`TEST_DMGA_Trigger`、2026-07-16）で確認済み。arg0=Action(Str), arg1=Int(用途未確定,既定0), arg2〜arg6=Str(既定は空。Cat/Mime Type/Data/Extra×2と推定・未確定), arg7=Package(Str), arg8=Class(Str), arg9=Target(Int。Target: Broadcast Receiverを選択した実例でval=0) |
 
 ### クリップボード
 
@@ -248,7 +249,26 @@ arg10 Int  Use Global Namespace: 1=On
 | 411 | Device Boot |
 | 413 | Device Shutdown |
 | 461 | Notification |
+| 599 | Intent Received |
 | 1000 | Display Unlocked（※Tasker-XML-Info では "Plugin" とも記載あり。実機XMLとDescriptionより "Display Unlocked" と確認） |
+
+### Intent Received (code=599) の構造
+
+`backup.xml`実例（Profile 715、AutoLocation向けIntent受信）で確認済み:
+
+```xml
+<Event sr="con0" ve="2">
+    <code>599</code>
+    <Str sr="arg0" ve="3">（受信するIntentのAction文字列）</Str>
+    <Int sr="arg1" val="0"/>
+    <Int sr="arg2" val="0"/>
+    <Str sr="arg3" ve="3"/>
+    <Str sr="arg4" ve="3"/>
+</Event>
+```
+
+- arg0 = Action文字列（実例で確認済み）。arg1〜arg4（Cat/Scheme/Mime Type等）は実例では全て未使用（デフォルト値）のため個別の対応は未確定
+- **Extraの自動変数化ルール**（公式ドキュメント [tasker.joaoapps.com/userguide/en/intents.html](https://tasker.joaoapps.com/userguide/en/intents.html) で確認済み、2026-07-16）: 受信したIntentのExtraは、キー名を①全て小文字化②3文字未満なら`var_`前置③英数字以外を`_`に変換④先頭/末尾が英数字以外なら`a`を前置/後置⑤重複時は`_dup`後置、というルールでローカル変数化される。例: extraキー`totalChecked`→`%totalchecked`（キャメルケースの大文字小文字情報は失われ全て小文字になる。区切り記号は挿入されない）
 
 ---
 
