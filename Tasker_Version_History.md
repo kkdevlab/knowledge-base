@@ -1,7 +1,7 @@
 # Tasker バージョン管理
 
-最終更新: 2026-07-03
-インストール済み: **6.7.6-beta**
+最終更新: 2026-07-16
+インストール済み: **6.7.6-beta**（App上のバージョン表記は変わらず。2026-07-15 dev が休暇前に Play Store 外で追加ビルドを sideload 配布、導入済み。詳細は変更履歴の「追加ビルド」参照）
 最新リリース: **6.6.20**（2026/02/24）
 ベータ版: **6.7.6-beta**（Inline Projects in new UI, Scenes V2 Update 5 — WebView JS Bridge / Arrays Merge Template, New Runlog Screen, Material Symbols — 詳細: `Tasker_ScenesV2_67x-beta.md` / dev Q&A: `Tasker_DevNotes_67x-beta.md`）
 
@@ -152,6 +152,59 @@
 ---
 
 ## 変更履歴
+
+### v6.7.6-beta 追加ビルド（2026/07/15）— Play Store外 sideload配布（dev 休暇前リリース）
+
+> 出典: [\[DEV\] Going away until mid-September](https://www.reddit.com/r/tasker/comments/1uxefcs/dev_going_away_until_midseptember/)（joaomgcd、2026-07-15 投稿）。休暇中（〜9月中旬）はサポートできないため Google Play ベータには反映せず、Dropbox から直接APK配布（通常版／Direct-Purchase版／App Factory更新の3種）。**そのためアプリ上のバージョン表示は 6.7.6-beta のまま変わらない**。dev ⇔ ユーザーの確定挙動は `Tasker_DevNotes_67x-beta.md` に別途整理。
+
+| 機能 | 概要 |
+| ------ | ------ |
+| Scenes V2: フォントオプション | テキストが描画される全箇所でフォント指定が可能に |
+| Scenes V2: **Aspect Ratio** modifier | 新規追加 |
+| Scenes V2: Text 全プロパティ対応 | Text コンポーネントに可能な全プロパティを追加 |
+| Scenes V2: **Cancel Screen** イベントアクション | 新規追加 |
+| Scenes V2: **Enabled** プロパティ | 該当するコンポーネントに追加 |
+| Scenes V2: WebView に **Headers** state | 追加 |
+| Scenes V2: Material Symbol 対応 | 追加 |
+| Scenes V2: Show When 追加ディレイ | トランジションにオプションの追加遅延を設定可能 |
+| Scenes V2: Text Input の入力タイプ | キーボード種別（数字/メール等）を指定可能に |
+| Scenes V2: modifier のコピー＆ペースト | 対応 |
+| Scenes V2: **Button がスロット対応** | 中のテキストを自由にカスタム、他コンポーネントも埋め込み可能に |
+| Scenes V2: flexbox の direction が boolean 対応 | **Toggle Variable** イベントで簡単に切替可能に。**Reverse** を direction から分離 |
+| Scenes V2: Progress Bar **Display Progress** state | 変数にバインドしたアニメーション進捗を表示 |
+| Scenes V2: Progress Bar のドット無効化・gap 追加 | 対応 |
+| Scenes V2: 数値入力に minus/plus ボタン | 該当箇所に追加 |
+| Scenes V2: コンポーネント名のローカライズ | 対応 |
+| Scenes V2: modifier ピッカー順序改善 | 親の存在に依存する modifier をピッカー先頭に |
+| Scenes V2: Text フィールドが複数行対応 | Text コンポーネント編集画面 |
+| Scenes V2: Key Pressed イベントの **Consume** オプション削除 | **Stop Propagation** と重複のため整理 |
+| Scenes V2: FlowRow アイコン変更 | FlowColumn と区別できるよう変更 |
+| New UI: メイン画面でリスト手動並び替え | 対応 |
+| New UI: 新Runlogにエラーのみ表示ボタン | 追加 |
+| New UI: インラインプロジェクトが検索結果にも表示 | 対応 |
+| New UI: 開発者オプションでプロジェクト画面上部ボタン非表示 | 追加（有効時は全選択扱い） |
+| New UI: リストアイテムの高さ統一・見た目均一化 | 対応 |
+| New UI: メイン画面アイテムを connected list 化 | 対応 |
+| New UI: Settings → Developer でトランジション詳細設定 | 追加 |
+| New UI: プロファイルスイッチをカード右側へ移動 | プロファイル詳細は一旦非表示（将来復活予定） |
+| New UI: メイン画面・プロジェクト/プロファイル遷移の演出改善 | 対応 |
+| New UI: アイテムカードのタグチップを一旦削除 | 将来別形式で復活予定 |
+| Java Code: **runShellTasker** 関数追加 | Run Shell アクションと同等のシェル実行が Java Code から可能に |
+| Java Code: Activity ライフサイクル監視 | `tasker.doWithActivity` で起動した Activity のライフサイクルを監視する方法が追加（changelog未記載、コメント欄で判明）。詳細 → `Tasker_DevNotes_67x-beta.md` |
+| App Factory | アプリ生成失敗時、詳細で分かりやすいエラーメッセージを表示 |
+| 大容量変数への警告 | 非常に大きい変数を書き込もうとした際に警告表示 |
+| Widgets V2 | Material Symbol 対応 |
+
+**主なバグ修正**:
+
+- アプリ全体で言語表示が誤る場合がある問題を修正
+- Tasky ルーチン閲覧時のクラッシュを修正（試み）
+- JSON で複数変数を設定する際の軽微な不具合を修正
+- データクリア時に発生することがあったクラッシュを修正
+- グローバル配列の push/pop 時、**Variable Set** イベントがシフトした要素数分すべて発火するよう修正（従来は1回のみ）。pop 時は削除された最上位要素に対して **Variable Cleared** も発火
+- プロファイルの Wifi Connected 条件を編集するとそのプロファイルが無効化されてしまう問題を修正
+
+---
 
 ### v6.7.6-beta（2026/07）— Inline Projects, Scenes V2 Update 5, New Runlog Screen, Material Symbols
 

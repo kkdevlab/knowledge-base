@@ -2,10 +2,10 @@
 
 r/tasker の [DEV] リリーススレッド（開発者 joaomgcd の直接回答）から、**技術的に有用な確定挙動・回避策・既知バグ**を抽出したもの。単なる感想・要望のみのやりとりは除外。
 
-- 出典: [6.7.5-beta スレッド](https://www.reddit.com/r/tasker/comments/1u7d04g/dev_tasker_675beta_projects_in_new_ui_write_json/)（クローズ想定・アーカイブ）／ [6.7.6-beta スレッド](https://www.reddit.com/r/tasker/comments/1ull0si/dev_tasker_676beta_inline_projects_in_new_ui/)
+- 出典: [6.7.5-beta スレッド](https://www.reddit.com/r/tasker/comments/1u7d04g/dev_tasker_675beta_projects_in_new_ui_write_json/)（クローズ想定・アーカイブ）／ [6.7.6-beta スレッド](https://www.reddit.com/r/tasker/comments/1ull0si/dev_tasker_676beta_inline_projects_in_new_ui/)／ [6.7.6-beta 追加ビルド（sideload）スレッド](https://www.reddit.com/r/tasker/comments/1uxefcs/dev_going_away_until_midseptember/)（2026-07-15、dev休暇前リリース）
 - 変更点そのものの一覧 → `Tasker_Version_History.md`
 - Scene V2 の一般仕様 → `Tasker_ScenesV2_67x-beta.md` / `Tasker_ScenesV2_Official_Manual.md`
-- 最終取得元 JSON: `Tasker/Doc/tasker_675beta.json` / `tasker_676beta.json`
+- 最終取得元 JSON: `Tasker/Doc/tasker_675beta.json` / `tasker_676beta.json` / `tasker_dev_vacation_midseptember.json`
 
 ---
 
@@ -117,3 +117,11 @@ WebView 内の JavaScript から Tasker アクションを直接呼べる `Taske
 - 「Overlay With Result」を同一 id で2連続表示すると2つ目が早期終了 → **Fixed**
 - List Dialog の First Visible Index がライトテーマで見えない／ダーク⇔ライト切替でクラッシュ → **Fixed**
 - 多数の Scene V2 クラッシュ・マルチディスプレイ問題 → **Fixed**
+
+---
+
+## I. Activity ライフサイクル監視（6.7.6-beta 追加ビルド、2026-07-15）
+
+- `tasker.doWithActivity` で起動した Activity の**ライフサイクルを監視する方法**が追加された（公式 changelog には未記載。ユーザーコメントで判明）
+- 出典コメント（[thread](https://www.reddit.com/r/tasker/comments/1uxefcs/dev_going_away_until_midseptember/)、投稿者 aasswwddd）: サンプルコード → `https://pastebin.com/raw/W8gDECd0`
+- **要実機検証**（kklab未検証。使用機会があれば `Tasker/Doc/troubleshoot.md` に実装知見を追記）
