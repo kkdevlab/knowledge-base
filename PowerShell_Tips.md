@@ -113,3 +113,11 @@
 
 - **確認方法**: `pwsh.exe -?` で `-WindowStyle | -w` オプションの存在を確認できる
 - **備考**: `.ps1`ファイル自体の変更は不要。既存タスクは`Set-ScheduledTaskAction`でActionのArgumentsを更新すればよい
+
+---
+
+## 2026-07-17: ProcessStartInfo.ArgumentListは.NET Framework版PowerShell(5.1)では使えない
+
+- **内容**: `System.Diagnostics.ProcessStartInfo`の`ArgumentList`プロパティ（引数をエスケープ不要で個別に追加できるコレクション）は.NET Core/.NET 5+ベースのAPIで、Windows標準の`powershell.exe`（.NET Framework 4.x・PowerShell 5.1）では利用できない
+- **対処**: 外部プロセスをArgumentList経由で起動するスクリプトは、`powershell.exe`ではなく`"C:\Program Files\PowerShell\7\pwsh.exe"`を明示的に指定して実行する
+- **注意**: Taskerなどのオートメーションから`powershell -File ...`のような旧来のコマンドをそのまま流用すると、この非互換に気づかず実行時エラーになる（起動元のコマンド文字列も含めて`pwsh.exe`に揃える必要がある）
