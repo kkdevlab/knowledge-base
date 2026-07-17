@@ -121,3 +121,50 @@
 - **内容**: `System.Diagnostics.ProcessStartInfo`の`ArgumentList`プロパティ（引数をエスケープ不要で個別に追加できるコレクション）は.NET Core/.NET 5+ベースのAPIで、Windows標準の`powershell.exe`（.NET Framework 4.x・PowerShell 5.1）では利用できない
 - **対処**: 外部プロセスをArgumentList経由で起動するスクリプトは、`powershell.exe`ではなく`"C:\Program Files\PowerShell\7\pwsh.exe"`を明示的に指定して実行する
 - **注意**: Taskerなどのオートメーションから`powershell -File ...`のような旧来のコマンドをそのまま流用すると、この非互換に気づかず実行時エラーになる（起動元のコマンド文字列も含めて`pwsh.exe`に揃える必要がある）
+
+---
+
+## 2026-07-17: タスクスケジューラのCommand/Argumentsを正しく分離しないとFILE_NOT_FOUNDになる
+
+- **エラー内容**: `New-ScheduledTaskAction`や`schtasks`でスペースを含む実行パス（例: `C:\Program Files\PowerShell\7\pwsh.exe -WindowStyle Hidden ...`）をまとめて1つの文字列として渡すと、登録後のタスクXMLで`<Command>C:\Program</Command>`・`<Arguments>Files\PowerShell\7\pwsh.exe -WindowStyle Hidden ...</Arguments>`のように最初のスペースで分割されてしまう。実行するたびに`LastTaskResult: 2147942402`（0x80070002 = ERROR_FILE_NOT_FOUND）で即失敗する
+- **原因**: タスクスケジューラのAction（Exec）は`Command`と`Arguments`が別フィールドであり、実行パス全体を`Command`側に丸ごと渡すと最初の空白で機械的に分割されてしまう
+- **解決方法**: `New-ScheduledTaskAction -Execute '<実行ファイルのフルパス>' -Argument '<オプション文字列>'`のように、実行ファイルパスとオプションを最初から別々の引数として渡す
+  ```powershell
+  $action = New-ScheduledTaskAction -Execute 'C:\Program Files\PowerShell\7\pwsh.exe' -Argument '-WindowStyle Hidden -NoProfile -File "C:\path\to\script.ps1"'
+  ```
+- **注意**: `schtasks /query /tn "<タスク名>" /xml`でタスクの実際の`<Command>`/`<Arguments>`を確認できる。似た症状（`0x80070002`）でもmemory/troubleshooting.mdの2026-04-23エントリ（実行ファイル名のみ指定でPATH解決に失敗）とは原因が異なるので、まずXMLで分割位置を確認してから切り分けること
+
+---
+
+## 2026-07-17: New-ScheduledTaskSettingsSetのパラメータ名は反転したブーリアン命名になっている
+
+- **内容**: `New-ScheduledTaskSettingsSet`には`-DisallowStartIfOnBatteries`や`-StopIfGoingOnBatteries`という直感的な名前のパラメータは存在しない。実際は`-AllowStartIfOnBatteries`（指定しなければ既定でdisallow=true）・`-DontStopIfGoingOnBatteries`（指定しなければ既定でstop=true）という反転した命名になっている
+- **確認方法**: `Get-Command New-ScheduledTaskSettingsSet -Syntax`でパラメータ一覧を確認できる
+- **対処**: 既定のバッテリー挙動（バッテリー駆動中は開始しない・バッテリー駆動に切り替わったら停止する）を維持したい場合は、これらのパラメータを何も指定しなければ良い（既定値がそのまま望ましい動作になっている）
+
+---
+
+## 2026-07-17: -WindowStyle Hiddenは既定ターミナルがWindows Terminalの環境では効かないことがある
+
+- **内容**: `pwsh.exe -WindowStyle Hidden -File script.ps1`をタスクスケジューラから実行しても、Windows 11で既定ターミナルアプリがWindows Terminal（`wt.exe`）に設定されている環境では、コンソールウィンドウ（タイトルに実行コマンドラインがそのまま表示される）が表示され続けることがある
+- **原因**: Windows Terminalへのターミナル委任（Default Terminal Application）が有効な環境では、`-WindowStyle`によるウィンドウ非表示リクエストが確実に反映されない
+- **対処**: `conhost.exe --headless`で回避できる場合があるが、環境によっては`conhost.exe`自体が存在しない（本環境で確認）。確実な代替として、VBScriptの`WScript.Shell.Run`（第2引数に`0`=`SW_HIDE`を指定）でWin32レベルの完全非表示起動を行う
+  ```vbscript
+  Set objShell = CreateObject("WScript.Shell")
+  objShell.Run """C:\Program Files\PowerShell\7\pwsh.exe"" -NoProfile -File ""C:\path\to\script.ps1""", 0, True
+  ```
+  タスクスケジューラのActionは`wscript.exe "<このvbsのパス>" <引数>`のように、直接ではなくvbs経由で起動する
+- **注意**: 2026-07-15に「`-WindowStyle Hidden`で解消」と記録したが、それは本環境（Windows Terminalが既定ターミナル）では不十分だったことが今回判明した。`-WindowStyle Hidden`は環境によっては効くこともあるため、まず試してよいが、それでも表示される場合はVBScript方式に切り替える
+
+---
+
+## 2026-07-17: Invoke-RestMethodのcatchブロックで$_.ErrorDetailsがnullになりStrictMode下で例外が握りつぶされる
+
+- **エラー内容**: `Invoke-RestMethod`が失敗した際の`catch`ブロックで`$_.ErrorDetails.Message`にアクセスしたところ、`PropertyNotFoundException: The property 'Message' cannot be found on this object`が発生し、本来報告したかったエラー内容（実際の原因）が完全に隠れてしまった
+- **原因**: `$_.ErrorDetails`はHTTPエラーレスポンス（本文付き）がある場合のみ設定され、タイムアウトや接続エラーなどレスポンス本文が存在しない失敗では`$null`になる。`Set-StrictMode -Version Latest`環境では、`$null`に対するプロパティアクセス（`$null.Message`）がエラーとして扱われる
+- **解決方法**: `$_.ErrorDetails`が存在するかを先にチェックする
+  ```powershell
+  $errorDetail = if ($_.ErrorDetails) { $_.ErrorDetails.Message } else { $null }
+  if (-not $errorDetail) { $errorDetail = $_.Exception.Message }
+  ```
+- **注意**: `$_.ErrorDetails.Message`を直接使っているコードはStrictMode環境では同じ危険がある。HTTPレスポンス以外の失敗（タイムアウト等）が起きうるすべての`Invoke-RestMethod`/`Invoke-WebRequest`のcatchで同様のガードを入れること

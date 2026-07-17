@@ -49,5 +49,29 @@ Google Gemini API (`generativelanguage.googleapis.com`) の generateContent REST
 
 - APIキーは `x-goog-api-key` ヘッダーで渡せる（`?key=`クエリパラメータに書くとログ・URL履歴に残りやすいので、可能ならヘッダー方式を優先）
 
+## classic generateContent（REST）のTool objectフィールド名はcamelCase
+
+- 新しい「Interactions API」（`/v1beta/interactions`）のドキュメント例では`{"type": "google_search"}`のようなsnake_caseの表記が出てくるが、従来の`/v1beta/models/{model}:generateContent`エンドポイントではフィールド名はcamelCaseになる
+  ```json
+  "tools": [
+    { "googleSearch": {} },
+    { "urlContext": {} }
+  ]
+  ```
+- `googleSearch`（Web検索によるgrounding）は無料枠だと`429 RESOURCE_EXHAUSTED`になることがある（`urlContext`単体・toolなしはどちらも成功したため、`googleSearch`固有の割り当て制限と判断できる）
+- `urlContext`（プロンプト内に書いたURLを直接取得する）は無料枠でも問題なく動作する。自由なWeb検索はできないが、確認先URLが決まっている用途ならこれで十分
+
+## generationConfig.thinkingConfig.thinkingLevelでreasoning effortを指定できる
+
+- classic generateContentでは`generationConfig.thinkingConfig.thinkingLevel`に`minimal`/`low`/`medium`/`high`のいずれかを指定する（Gemini 3以降のモデル対象。古いモデルに指定するとエラーになる）
+  ```json
+  "generationConfig": {
+    "thinkingConfig": { "thinkingLevel": "high" }
+  }
+  ```
+- 旧方式の`thinkingBudget`（トークン数指定）と`thinkingLevel`は同時指定不可
+- 未指定時の既定値はGemini 3系で"medium"（モデル側の既定であり、ローカルの設定ファイル等には依存しない）
+
 ---
 *(2026-07-12 DocomoMailGuard Gemini版構築時に実地確認)*
+*(2026-07-17 PromptRunner ai-news統合・effort機能追加時に実地確認)*
