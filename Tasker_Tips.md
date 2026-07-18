@@ -967,3 +967,17 @@ $gzip.Close()
 
 - 変更後は必ずデコードして元のJSONと意図した差分だけになっているか確認してからXMLに書き戻す
 - `cdate`/`edate`等の他フィールドは通常のXMLテキストなので直接編集でよい
+
+---
+
+## ADB（USB接続）で実機のTaskerを直接操作・検証する
+
+PC-携帯間の検証サイクルを高速化するため、ADB経由で以下がすべて可能（USBデバッグ有効・adb devicesで認識されていれば追加設定不要、Tasker側は「Allow External Access」が有効なら追加操作なしでタスク起動も可能だった）。
+
+- **タスクを直接起動**: `adb shell am broadcast -a net.dinglisch.android.tasker.ACTION_TASK -e task_name "タスク名"`（Join/Profileを介さず、そのタスク単体をピンポイントで実行できる）
+- **Run Logを直接取得**: `adb pull /storage/emulated/0/Tasker/log/runlog.txt <PC側パス>`（ユーザーにログのコピペを頼まなくてよい）
+- **画面を直接確認**: `adb shell screencap -p /sdcard/x.png && adb pull /sdcard/x.png <PC側パス>`（Claudeが直接スクリーンショットを見て結果を検証できる）
+- **PCのローカルHTTPサーバーに携帯からアクセス**: `adb reverse tcp:PORT tcp:PORT` を張ると、携帯側の`http://127.0.0.1:PORT/`がPCのlocalhostに転送される。Tasker の HTTP Request アクションのテスト用データをGoogle Drive等にアップロードせず、PC上で`python -m http.server PORT`を立てるだけで即座に配信・イテレーションできる
+- **Taskerの内部ストレージを直接閲覧**: `adb shell ls -la /storage/emulated/0/Tasker/` でシーン・タスク・ログの実ファイル一覧を確認可能（`scenes/`配下を見れば、リポジトリに記録されていない実機限定のシーンファイルの有無もすぐ分かる）
+- **注意**: `adb shell input keyevent KEYCODE_BACK` でTasker Scene V2のフルスクリーン画面を閉じられるが、機械的に短時間で「閉じる→即実行」を繰り返すと、実際の手動操作では起きないタイミングの不具合（例: WebViewが真っ黒になる）を誘発することがある。再現性の判断には注意する
+- **タスクXMLのインポートは「bad data format」エラーが出ても部分的に反映されることがある**: `adb shell am start -a android.intent.action.VIEW -d "file:///storage/emulated/0/Download/<file>.xml" -t "text/xml" -n net.dinglisch.android.taskerm/com.joaomgcd.taskerm.datashare.import.ActivityImportTaskerDataFromXml` でタスクXMLをインポートしようとすると "Import failed. Error details: bad data format" のエラーダイアログが出ることがあるが、それでもタスク自体はタスク一覧に作成され `am broadcast -e task_name` で実行可能になっている場合がある。一方で、特定のアクション引数（長いインラインJSON文字列など）だけは反映されず元の値のまま（または空）になっていることがある。エラーが出た場合、「タスクが動いた＝中身も意図通りインポートされた」と判断せず、実機のTasker UIで該当フィールドを直接開いて確認すること
