@@ -222,3 +222,12 @@ Tasker 利用中に遭遇したエラー・警告の解決記録（汎用的な�
 - **原因**: Intent Received（Event）で自動変数化されるExtraキー名（例: extraキー`success`→ローカル変数`%success`）は、JavaScriptlet内でも同名のbare識別子として自動的にJSスコープへバインド済みになっている。この状態で`let x = ...`のように同名で再宣言すると通常のJS構文エラーになる
 - **解決方法**: Extraキー名と衝突する名前で`let`/`const`宣言しない。別名の変数に読み替えて使う（例: `success`→`isSuccess`）。オプショナルなExtra（送られないこともある値）は`typeof x !== "undefined"`で存在確認してから参照する
 - **備考**: Extraキー名の変数化ルール（全て小文字化・3文字未満は`var_`前置・英数字以外は`_`に変換等）は[公式ドキュメント](https://tasker.joaoapps.com/userguide/en/intents.html)を参照
+
+---
+
+## 2026-07-18: Scene V2 WebViewの「Update Scene v2 (content)」が埋め込みスクリプトを複数回実行することがある（原因未特定）
+
+- **エラー内容**: WebView1つで完結するScene V2画面（`SV2_Webview`等の共通テンプレート）でShow Scene v2 → Update Scene v2(Property: content)の定型パターンを使うと、HTMLに埋め込んだ`<script>`内の描画処理が実際には2回実行され、DOM操作が「追記」方式（appendChild等）の場合は表示内容が丸ごと2重に表示される。タスクのRun Logでは該当アクション（HTTP Request/Show Scene v2/Update Scene v2）はいずれも1回だけ実行されており、供給元データ・タスクの実行回数はクリーンなのに表示だけ2重になる
+- **原因**: Update Scene v2のcontent反映処理が内部的に埋め込みスクリプトを複数回評価している可能性が高い（Tasker本体の実装かAndroid WebViewエンジンかの層までは特定できていない未解決事項）
+- **正解**: WebView内のJSで画面を組み立てる関数は呼び出し回数に依存しない「冪等」な実装にする。要素追加系（appendChild等）を使う場合は描画前に対象コンテナを`element.innerHTML = ''`等で必ずクリアしてから構築する。単純な`element.innerHTML = 内容`という「置き換え」方式なら2回実行されても結果は変わらない
+- **備考**: 同じ仕組みを使う`MD_Preview_Launcher`（`SV2_Webview`）は「置き換え」方式だったため症状が表面化していなかった。「1回しか呼ばれない」前提でDOM操作を書かないこと。検証事例: `PromptRunner/PR_MobileShow`（詳細は`Tasker/Doc/troubleshoot.md`参照）
