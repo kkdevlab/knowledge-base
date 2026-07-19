@@ -26,6 +26,12 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 |---|---|
 | Notion_MCP_Tips.md | Notion MCP ツールのエラーと対処法（multi_select の渡し方 等） |
 
+### Claude Code
+
+| ファイル | 概要 |
+|---|---|
+| Claude_Code_MCP_Connection_Tips.md | Claude Code (VS Code拡張) のMCPサーバー接続タイミング問題（セッション開始直後は未接続のMCPがそのチャット内では回復しない仕組み・関連GitHub Issue・対処法として採用したセッション開始チェックの設計） |
+
 ### Windows
 
 | ファイル | 概要 |
