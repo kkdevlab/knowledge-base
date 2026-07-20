@@ -24,3 +24,12 @@
 - **原因**: `adb shell dumpsys netpolicy`で該当UIDを確認すると`blocked_state={blocked=APP_BACKGROUND, allowed=NONE, effective=APP_BACKGROUND}`となっており、バッテリー最適化(App Standby Bucket=RARE等)によりバックグラウンド実行中のアプリの通信自体がOSのファイアウォールで遮断されていた。外部トリガー(Tasker等)でしか起動されずアプリのUIをユーザーが直接開く頻度が低い場合に起きやすい
 - **解決方法**: 端末の「設定→アプリ→対象アプリ→バッテリー→バッテリーの最適化」で「制限なし」に設定する。adbから同等の効果を検証するには`adb shell dumpsys deviceidle whitelist +<パッケージ名>`を実行し、`dumpsys netpolicy`のblocked_state.effectiveがNONEに変わることで確認できる
 - **備考**: `dumpsys netpolicy | grep -A1 "UID=<uid>"`で該当UIDの状態を確認できる(UIDは`adb shell pm list packages -U <パッケージ名>`で取得)。端末側の設定でありOS更新等でリセットされる可能性がある
+
+---
+
+## 2026-07-21: adb shell am broadcastの暗黙的Intentがバックグラウンド実行制限でポリシー却下される
+
+- **エラー内容**: `adb shell am broadcast -a <custom.action>`（コンポーネント未指定の暗黙的Intent）を送っても、マニフェスト登録済み（`exported="true"`）のBroadcastReceiverに全く届かない。`am broadcast`コマンド自体は`Broadcast completed: result=0`で正常終了するため、一見成功したように見える
+- **原因**: `adb shell dumpsys activity broadcasts <package>`の履歴で確認すると、`reason: skipped by policy at enqueue: Background execution not allowed: receiving Intent {...} to <package>/<Receiver>`として、配信自体がOSレベルでポリシー却下されていた。カスタムアクションの暗黙的Intentは、対象アプリがバックグラウンド状態の場合に配信が拒否されることがある。一方、コンポーネントを明示指定した明示的Intentはこの制限を受けない
+- **解決方法**: `adb shell am broadcast -n <package>/<component> -a <custom.action>`のように`-n`でコンポーネントを明示指定して送る。実機のTasker等の自動化アプリは内部的に明示的Intentを使っているため、この制限に引っかからず正常に届く
+- **備考**: 「adb broadcastが成功したはずなのにレシーバーが全く動いた形跡がない」場合、まず`dumpsys activity broadcasts <package>`で`skipped by policy`が出ていないか確認する。Log.i/Log.e等のlogcat出力も、そもそもレシーバーに到達していなければ一切残らない点に注意（ログが全く無いこと自体が「配信されていない」ことの強い手がかりになる）
