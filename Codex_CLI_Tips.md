@@ -38,3 +38,19 @@
 
   npm版が入っている場合は競合検出され対話プロンプトでアンインストール確認が出るが、非対話実行時は自動アンインストールされないため`npm uninstall -g @openai/codex`を別途手動実行する。インストーラーは`%LOCALAPPDATA%\Programs\OpenAI\Codex\bin`をPATH先頭に自動追加し、`~\.codex\packages\standalone\current`というジャンクションで現在バージョンを管理する
 - **確認済みバージョン**: アプリ内蔵版 0.145.0-alpha.18、PATH登録の凍結版 0.130.0-alpha.5、スタンドアロン版 0.144.6（2026-07-19時点）
+
+---
+
+## 2026-07-22: VS Code拡張機能(openai.chatgpt)も独自にcodex.exeを同梱している(4系統目)
+
+- **内容**: 07-19に整理した3系統(デスクトップアプリ内蔵/PATH登録凍結版/npm)に加え、VS Code拡張機能`openai.chatgpt`(表示名「Codex – OpenAI's coding agent」)も拡張機能フォルダ内に独自の`codex.exe`を同梱している
+  - 場所: `<拡張機能フォルダ>\bin\windows-x86_64\codex.exe`(例: `%USERPROFILE%\.vscode\extensions\openai.chatgpt-<version>-win32-x64\bin\windows-x86_64\codex.exe`)
+  - バージョンは拡張機能ごとに固定・同梱(`codex-package.json`に記載。拡張機能v26.715.61943で同梱codex v0.145.0-alpha.27だった)
+  - 設定`chatgpt.cliExecutable`(既定`null`)は「開発用のみ」と明記されており、明示指定しない限りPATH上のスタンドアロン版ではなくこの同梱版が使われる
+- **確認方法**: 拡張機能フォルダ配下を`codex`でファイル名検索。`codex-package.json`にバージョン情報が入っている
+- **更新の仕組み**: 拡張機能フォルダはバージョン番号入りのフォルダ名で管理されており、VS Codeが拡張機能を更新するとフォルダごと新規展開される。実機で`codex.exe`・`extension.js`・`package.json`の更新日時がほぼ同時刻だったことを確認済み → **拡張機能の更新＝同梱`codex.exe`も同時に更新される**（部分更新ではなく丸ごと差し替え）
+- **3系統の更新方式の違い**（デスクトップアプリ内蔵/スタンドアロン版/VS Code拡張機能同梱版）:
+  - スタンドアロン版: ターミナル起動時に更新通知が表示され、`codex-update`等のコマンドを**手動実行**して初めて更新される
+  - デスクトップアプリ: アプリ自身が裏で自動更新(ハッシュフォルダを差し替え)、**手動操作不要**
+  - VS Code拡張機能: VS Code本体の拡張機能自動更新の仕組みに従う。`settings.json`に`extensions.autoUpdate`の明示設定が無ければVS Code既定(自動更新ON)が有効なため、これも**基本手動操作不要**
+- **注意**: 「デスクトップアプリ内蔵版」はOpenAI純正の「Codexデスクトップアプリ」のことで、Claude Code Desktopとは無関係（混同しやすいので注意）
