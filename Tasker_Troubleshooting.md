@@ -237,6 +237,15 @@ Tasker 利用中に遭遇したエラー・警告の解決記録（汎用的な�
 
 ---
 
+## 2026-07-24: Send IntentアクションのExtra欄に値だけ入力してしまい、受信側にExtraが渡らない
+
+- **症状**: 受信側アプリ（BroadcastReceiver）が期待するExtra（例: 共有シークレットのキー）を、Send Intent側で値だけ入力して送信すると、受信側では常に「未設定」扱いになる（`intent.getStringExtra("key")`がnullを返す）
+- **原因**: TaskerのSend IntentアクションのExtra欄（最大3つ）は`名前:値`（コロン区切り）形式で入力する必要がある。値だけ（例: `test1234`）を入力すると、Extraの名前（キー）が指定されないため受信側の`getStringExtra("期待するキー名")`と一致しない
+- **解決方法**: Extra欄に`key:test1234`のように必ず`名前:値`の形式で入力する。3つあるExtra欄のどれを使っても構わないが、それぞれ独立して`名前:値`を1組ずつ入力する
+- **備考**: 保存を忘れて画面を「戻る」で閉じてしまうケースと併発しやすいので、Send Intent編集後は必ず値を保存してから実機で再現確認する
+
+---
+
 ## 2026-07-18: Scene V2 WebViewの「Update Scene v2 (content)」が埋め込みスクリプトを複数回実行することがある（原因未特定）
 
 - **エラー内容**: WebView1つで完結するScene V2画面（`SV2_Webview`等の共通テンプレート）でShow Scene v2 → Update Scene v2(Property: content)の定型パターンを使うと、HTMLに埋め込んだ`<script>`内の描画処理が実際には2回実行され、DOM操作が「追記」方式（appendChild等）の場合は表示内容が丸ごと2重に表示される。タスクのRun Logでは該当アクション（HTTP Request/Show Scene v2/Update Scene v2）はいずれも1回だけ実行されており、供給元データ・タスクの実行回数はクリーンなのに表示だけ2重になる
