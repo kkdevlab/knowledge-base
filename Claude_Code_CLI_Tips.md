@@ -44,3 +44,23 @@
 - **確認方法**: 設定ファイルの値を直接読んで判断せず、`claude doctor`を実行して`Auto-updates: enabled/disabled`の行を見るのが確実(実際の反映結果を表示してくれる)
 - **真に自動更新を止めたい場合**: 環境変数`DISABLE_AUTOUPDATER`を設定する(設定ファイルの`autoUpdates:false`だけでは不十分なケースがある)
 - **確認済みバージョン**: 2.1.217 (2026-07-22)
+
+---
+
+## 2026-07-24: 非対話実行時にシステムプロンプト/ユーザープロンプトをファイルから読み込ませる方法
+
+- **内容**: `claude -p`（非対話モード）実行時、システムプロンプトとユーザープロンプトはそれぞれ別の渡し方になる
+  - **システムプロンプト**: 専用のファイル指定フラグがある
+    - `--system-prompt-file <path>`: デフォルトのシステムプロンプトを丸ごと置き換え
+    - `--append-system-prompt-file <path>`: デフォルトのシステムプロンプトに追記
+    - （文字列を直接渡したい場合は`-file`なしの`--system-prompt` / `--append-system-prompt`）
+  - **ユーザープロンプト**: 専用のファイル指定フラグは無い。`-p`は文字列引数だが、stdinにも対応しているのでファイルの中身をパイプで流し込む
+
+    ```powershell
+    Get-Content "C:\path\to\user_prompt.txt" -Raw | `
+      claude -p --system-prompt-file "C:\path\to\system_prompt.txt"
+    ```
+
+- **CLAUDE.mdとの違い**: `--system-prompt-file`はそのプロセス実行1回だけに効く一時的な指定。CLAUDE.md/ディレクトリ配下の自動読込ファイルとは無関係で、非対話スクリプト実行の文脈では明確に別物として扱う
+- **用途**: PowerShellスクリプト等から`claude.exe`を叩いて、プロンプトをファイル管理しつつAIの結果だけをテキスト/JSONで取得する自動化パターンに使える
+- **確認方法**: `claude --help`で`--system-prompt-file`が「引数不足」エラーを返すことで実在フラグと確認済み（`claude --help`のメイン出力には掲載されないが、他フラグの説明文中に`--system-prompt[-file]`という表記で存在が示唆されている）

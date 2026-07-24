@@ -54,3 +54,22 @@
   - デスクトップアプリ: アプリ自身が裏で自動更新(ハッシュフォルダを差し替え)、**手動操作不要**
   - VS Code拡張機能: VS Code本体の拡張機能自動更新の仕組みに従う。`settings.json`に`extensions.autoUpdate`の明示設定が無ければVS Code既定(自動更新ON)が有効なため、これも**基本手動操作不要**
 - **注意**: 「デスクトップアプリ内蔵版」はOpenAI純正の「Codexデスクトップアプリ」のことで、Claude Code Desktopとは無関係（混同しやすいので注意）
+
+---
+
+## 2026-07-24: 非対話実行時にシステムプロンプト/ユーザープロンプトをファイルから読み込ませる方法
+
+- **内容**: `codex exec`（非対話モード）実行時、システムプロンプトとユーザープロンプトはそれぞれ別の渡し方になる
+  - **システムプロンプト**: 専用のCLIフラグは無く、`config.toml`のキーを`-c`で上書きする形でファイルパスを渡す
+    - `-c model_instructions_file="<path>"`: デフォルトの組み込み指示(AGENTS.mdの代わり)を丸ごと置き換え。`~/.codex/config.toml`に恒久設定として書いても、`-c`でその実行だけ上書きしてもよい
+    - `developer_instructions`(文字列)は追記寄りのオプションとして存在するが、ファイルパス対応の専用キーは未確認
+  - **ユーザープロンプト**: `codex exec [PROMPT]`の`PROMPT`引数を省略する(または`-`を渡す)と、標準入力(stdin)から読み込む仕様になっている。ファイルの中身をパイプで流し込める
+
+    ```powershell
+    Get-Content "C:\path\to\user_prompt.txt" -Raw | `
+      codex exec -c 'model_instructions_file="C:\path\to\system_prompt.txt"'
+    ```
+
+- **AGENTS.mdとの違い**: `model_instructions_file`はその実行1回だけに効く一時的な指定。プロジェクト配下やホームディレクトリ(`~/.codex/AGENTS.md`)の自動読込ファイルとは別物で、非対話スクリプト実行の文脈では明確に区別する
+- **結果の取得**: `-o` / `--output-last-message <path>`で最終応答をファイルに書き出すのが定番(標準出力にも出るが、パースするならこちらが確実)
+- **Claude Code CLIとの対比**: Claude Codeは`--system-prompt-file`という専用フラグを持つが、Codexは汎用の`-c model_instructions_file=`経由という設計の違いがある
