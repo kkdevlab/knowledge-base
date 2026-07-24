@@ -45,6 +45,13 @@ Google Gemini API (`generativelanguage.googleapis.com`) の generateContent REST
 - `GET https://generativelanguage.googleapis.com/v1beta/models`（ヘッダー `x-goog-api-key`）で `supportedGenerationMethods` に `generateContent` を含むモデル一覧を確認してから使うこと
 - エイリアス `gemini-flash-latest` / `gemini-pro-latest` はGoogleが指す実体を随時更新するため、個別モデル名の廃止に振り回されにくい（2026-07時点、`gemini-flash-latest`の実体は`gemini-3.5-flash`）
 
+## 無料枠のレート制限（RPD）はモデルごとに独立している
+
+- 無料枠は「1日あたりのリクエスト数（RPD）」の上限がモデルごとに個別に設定されている（例: 2026-07時点で`gemini-3.5-flash`は20回/日）。全モデル合算のクォータではないため、あるモデルが429（`RESOURCE_EXHAUSTED`）になっても、別モデルはまだ枠が残っていることが多い
+- 429のレスポンスボディに`quotaId`（例: `GenerateRequestsPerDayPerProjectPerModel-FreeTier`）と`quotaValue`が含まれ、日次上限であることが明記される。日次リセットなので、同じモデルへ即座にリトライしても無駄（`retryDelay`が数十秒でも実際は翌日まで解消しない）
+- 429と5xx（一時的な高負荷）は原因が異なるため、エラーハンドリングでは区別した方がよい（429=クォータ切れで別モデルへの切替が有効、5xx=一時障害で同モデルへの再試行が有効）
+- 2026-07-24時点で無料枠利用可能を確認したモデル: `gemini-3.5-flash` / `gemini-3.6-flash` / `gemini-3.5-flash-lite`。`gemini-2.5-flash`は新規ユーザーだけでなく既存プロジェクトからも404（廃止済み）
+
 ## 認証
 
 - APIキーは `x-goog-api-key` ヘッダーで渡せる（`?key=`クエリパラメータに書くとログ・URL履歴に残りやすいので、可能ならヘッダー方式を優先）
