@@ -15,6 +15,26 @@
 - **解決方法**: EditTextタップ後に1秒程度`Start-Sleep`を挟んでから`input text`を実行し、さらに`screencap`で実際に入力された文字列を目視確認してからOKボタンをタップする。
 - **備考**: 通常のActivity直下のEditTextでは比較的発生しにくく、ダイアログ内など画面遷移直後のフォーカス確定が絡む場面で再現しやすい。
 
+## 2026-07-26: `adb shell input text`が日本語IME(Gboard)のローマ字変換に横取りされて文字化けする
+
+- **エラー内容**: EditTextに`adb shell input text "email@example.com"`のようなASCII文字列を送ったところ、実際に入力された内容が`えまいｌ＠...`のような全角ひらがな・カタカナに変換されていた（UI dumpの`text`属性で確認）。
+- **原因**: 端末のデフォルトIMEが日本語入力（Gboard等のローマ字変換モード）になっていると、`input text`が送るキー入力がIMEの変換エンジンを経由し、ASCII文字列がローマ字としてかな変換されてしまう。
+- **解決方法**: 一時的に変換を行わないIME（Tasker同梱のIME等、自動化目的で文字を素通しするもの）へ切り替えてから入力する。
+
+  ```sh
+  # 例: net.dinglisch.android.taskerm/com.joaomgcd.taskerm.keyboard.InputMethodServiceTasker
+  adb shell ime enable <パッケージ>/<IMEクラス名>
+  adb shell ime set <パッケージ>/<IMEクラス名>
+  # ここでinput text等を実行
+  # 例: com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME
+  adb shell ime set <元のIME>
+  adb shell ime disable <一時IME>
+  ```
+
+  `adb shell ime list -s`で現在有効なIME一覧、`ime list -a`で端末に
+  インストール済みの全IME（Tasker等サードパーティアプリが提供するIMEも含む）を確認できる。
+- **備考**: 既存のテキストが残っている場合、切り替え後にまず`input keyevent 123`（MOVE_END）→`input keyevent 67`（DEL）を必要文字数以上繰り返してクリアしてから入力し直すと確実。UI dump（`uiautomator dump`）の対象EditTextの`text`属性を見れば、入力後すぐにASCIIのまま反映されたか検証できる。
+
 ## 2026-07-17: 実機テスト中に画面がスリープしてadb操作が空振りする
 
 - **エラー内容**: `adb shell screencap`で撮った画像が真っ黒になり、直前に送ったタップ操作がすべて無効になっていた。
