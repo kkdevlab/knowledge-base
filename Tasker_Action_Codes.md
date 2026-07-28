@@ -140,8 +140,24 @@
 | Code | アクション名 | 備考 |
 |------|-------------|------|
 | 404 | Copy File | |
+| 406 | Delete File | arg0=ファイルパス, arg1=Shred Level(Int), arg2=Int（用途未確認・常に0）, arg3=Use Global Namespace(1=On)。`All_Action_Test.tsk.xml`で確認（2026-07-27） |
 | 410 | Write File | arg0=ファイルパス, arg1=書き込むテキスト, arg2=Int（Add=追記/1でON。0だと上書きと推測・未確認）, arg3=Int（Add Newline=末尾改行/1でON）。`DocomoMail_Trigger`/`Join_Router`のデバッグログ出力で使用実績あり |
+| 412 | List Files | arg0=Directory, arg1=Match Filter(Str), arg2=Sort Select(Int, 0=Alphabetic), arg3/arg4=Int（用途未確認・常に0）, arg5=Variable Array(Str), arg6=Use Global Namespace(1=On)。`All_Action_Test.tsk.xml`で確認（2026-07-27）。**既知の制限**: 対象ディレクトリが**他アプリのAndroid/data配下**の場合、`MANAGE_EXTERNAL_STORAGE`権限があっても`file not found`エラーで失敗する（Android 11+のSAF制限とみられる。checkSDPathログでは存在確認自体は通る）。回避策はRun Shell(123)をShizuku経由で使う（詳細→本ファイル「シェル操作」節）。DocomoMailGuardAndroidのログアーカイブ調査で確認（2026-07-28） |
 | 417 | Read File | arg0=ファイルパス, arg1=出力変数（`%var`形式）, arg2=Int（常に0、用途未確認）。`AN LOG表示`等で確認 |
+
+### シェル操作
+| Code | アクション名 | 備考 |
+|------|-------------|------|
+| 123 | Run Shell | arg0=Command(Str), arg1/arg2=Int（用途未確認・常に0。Timeout関連の可能性）, arg3=Store Output In(Str), arg4=Store Errors In(Str), arg5=Str（用途未確認・常に空）, arg6=Use Global Namespace(1=On), arg7=Int（用途未確認・常に0）, arg8=Use Shizuku(1=On)。`All_Action_Test.tsk.xml`で確認（2026-07-27）。**Shizuku経由なら`adb shell`と同じ権限経路になるため、List Files(412)がAndroid/data配下で失敗するケースの回避策として使える**（`ls`/`cp`/`rm`等を直接実行）。出力は単一の文字列変数（`%result()`のような配列形式にはならない）。複数行を配列として扱うにはArray Set(354)で改行区切りにする必要がある（DocomoMailGuardAndroidのログアーカイブ調査で確認、2026-07-28） |
+
+### Google
+| Code | アクション名 | 備考 |
+|------|-------------|------|
+| 321 | GD Upload（Google Drive アップロード） | arg0=Bundle（未使用・常に空）, arg1=Google Drive Account(Str), arg2=Data/File（アップロード元ローカルファイルパス, Str）, arg3=Str（用途未確認・常に空）, arg4=Remote Folder(Str), arg5=Str（用途未確認・常に空）, arg6=Overwrite If Exists(1=On), arg7=Int（用途未確認・常に0）, arg8=Str（用途未確認・常に空）。`All_Action_Test.tsk.xml`で確認（2026-07-27）。**List Files同様、アップロード元がAndroid/data配下だとSAF制限で読めない可能性が高い**（未検証・要実機確認）ため、DocomoMailGuardAndroidのログアーカイブでは一旦Run Shellでアクセス可能な場所へcopyしてからアップロードする設計にした。**⚠️ Continue Task After Errorはデフォルト Off**: Forループで複数ファイルを順次アップロードする用途では、1件失敗した時点でタスク全体が停止し以降のファイルが処理されない。バッチ/ループ用途では明示的に`<se>false</se>`（Continue Task After Error: On）を付けること（実機確認済み・2026-07-28）。**⚠️ Remote Folderは事前作成済みの同名フォルダを認識しない**: Drive API等Tasker外で先にフォルダを作っておいても、GD Uploadは初回実行時に自分で新しいフォルダを作成し、以後はそれを使い続ける（フォルダをパスやIDで解決するのではなく、Tasker内部で独自にフォルダ参照をキャッシュ・管理しているとみられる）。結果、同名フォルダが重複するので、事前にフォルダを用意せずTaskerに作らせるか、初回実行後にDrive側で重複を手動整理する（実機確認済み・2026-07-28） |
+| 324 | GD List | 未使用・詳細未調査 |
+| 325 | GD Trash | 未使用・詳細未調査 |
+| 326 | GD Download | 未使用・詳細未調査 |
+| 327 | GD Sign In | 未使用・詳細未調査 |
 
 ### システム設定
 | Code | アクション名 | 備考 |
@@ -416,6 +432,8 @@ backup.xml 内の複数実例（7件以上）で **arg2/arg3/arg4=0固定, arg6=
 | arg6 | 不明（実例では常に1） | `1` |
 | arg7 | Replace（置換文字列） | `"&amp;"` |
 
+**⚠️ arg0は常に上書きされる（グローバル変数に直接使うのは危険・実機確認済み 2026-07-28）**: arg5を「Store Result In（別の変数名）」だと想定してarg0にグローバル変数（`%GV_DATE`）を指定したところ、arg5の値に関わらず**arg0自体（`%GV_DATE`）が書き換わってしまった**（DocomoMailGuardAndroidのログアーカイブ実装中に発覚）。arg5の実際の役割は未解明のまま。**グローバル変数や他タスクが参照する変数の内容を加工したい場合は、必ず先にVariable Setでローカル変数へコピーしてから、そのローカル変数に対してVariable Search Replaceを実行すること**（元の変数はコピー元として一切触らない）。
+
 ### Variable Split / Join
 
 ```text
@@ -468,6 +486,32 @@ Variable Section %fname, From: %bkup_fatepos, Length: 8, Store: %filedate
 For %i, 1:10            ← 数値範囲（クォートなし）
 For %item, %array()     ← 配列要素
 ```
+
+#### For (39) — XMLパラメータ対応
+
+`All_Action_Test.tsk.xml`で確認（2026-07-27）。
+
+| arg | 内容 | 例 |
+| --- | ---- | -- |
+| arg0 | ループ変数名（`%`込み） | `%item` |
+| arg1 | 反復対象（数値範囲 or 配列） | `%files()` |
+| arg2 | 不明（実例では常に0） | `0` |
+
+End For (40) は引数なし。
+
+#### Array Set (354) — XMLパラメータ対応
+
+`All_Action_Test.tsk.xml`で確認（2026-07-27）。Run Shell(123)の出力（単一文字列）を配列化する用途で使用。
+
+| arg | 内容 | 例 |
+| --- | ---- | -- |
+| arg0 | 格納先の配列変数名 | `%files` |
+| arg1 | 分割元の文字列変数 | `%files_raw` |
+| arg2 | Splitter（区切り文字） | `" "`, `";"` |
+
+結果は `%var(1)`, `%var(2)`, ... `%var()` で参照する（For ループの反復対象としても使える）。
+
+**既知の不具合（未解明）**: XML内に生の改行文字（`&#10;`）をSplitterとして埋め込んでインポート・実行したところ、分割されず全データが`%var(1)`1要素に入った（実機確認・2026-07-28、DocomoMailGuardAndroidのログアーカイブ調査）。原因はXML/Tasker内部のいずれかで改行文字が失われている可能性。**回避策**: 分割元の文字列を作る側（Run Shell等）で、シェルの`tr`等を使って改行を`;`のような通常文字に変換してからArray Setに渡す。
 
 ---
 
