@@ -22,6 +22,17 @@ Tasker の変数は厳密な型（Integer や String など）を持たない。
 | **パターンマッチ** | Matches (~), Doesn't Match (!~) | 文字列として比較。ワイルドカード `*` が使える。`01` と `1` は一致しない |
 | **正規表現** | Regex Matches (~R) | 高度な文字列検索 |
 
+## USB接続の検知：Hardware vs Power
+
+- **State > Hardware > USB Connected（Class指定）**: スマホ自身がUSBホストとなりOTGで周辺機器（USBメモリ・キーボード等）を認識する場合の検知。デバイスクラス（Mass Storage、HID等）で絞り込む仕組みのため、**PCに接続してデータ転送・ADBデバッグする用途では発火しない**（用途が逆）
+- **State > Power > Power（Source: USB）**: PCへのUSB接続を検知したい場合はこちら。実機確認では、PC接続時に発火しACアダプタ充電のみでは発火しない（2026-07-30確認、機種・充電器依存の可能性はあるため過信は禁物）
+
+## Restore Settings プロファイルプロパティの適用範囲
+
+- プロファイルの「Restore Settings」（デフォルトON）は、Enterタスクで実行した **Settings カテゴリのアクション（Display Brightness、Ringer Volume、Display Timeout等）のみ**を、プロファイル非アクティブ時に自動で元の値に戻す
+- **ユーザー変数（ローカル/グローバル）は対象外**。他のプロファイルで「変数保存→Exitタスクで復元」というパターンを既に使っていても、Restore Settingsとは独立して動作し干渉しない
+- 出典: https://tasker.joaoapps.com/userguide/en/settings.html （"Settings are actions like Display Brightness and Ringer Volume whose effects are reversed by Tasker when the profile(s) which applied them are no longer active."）
+
 ### 条件演算子一覧
 
 | 演算子 | 略称 |

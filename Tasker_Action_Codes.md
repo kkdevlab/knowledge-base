@@ -780,9 +780,10 @@ End For (40) は引数なし。
 | ---- | --------------- |
 | `0` | Source: Any（いずれかの充電源） |
 | `1` | Source: AC |
-| `2` | Source: USB（推定・未確認） |
+| `2` | Source: USB |
 
 充電管理 開始（Power Any）: `arg0=0`、充電管理 中断（Not Power AC）: `arg0=1` + `<pin>true</pin>` で確認済み。
+`USB接続_消灯延長`（Power Source:USB）: `arg0=2` で確認済み（2026-07-30、実機エクスポートで確認）。
 
 ### Battery Level State (code=140) のパラメータ
 
