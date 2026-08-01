@@ -32,6 +32,12 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 |---|---|
 | Claude_Code_MCP_Connection_Tips.md | Claude Code (VS Code拡張) のMCPサーバー接続タイミング問題（セッション開始直後は未接続のMCPがそのチャット内では回復しない仕組み・関連GitHub Issue・対処法として採用したセッション開始チェックの設計） |
 
+### VS Code
+
+| ファイル | 概要 |
+|---|---|
+| VSCode_Extension_Dev_Tips.md | VS Code拡張機能の自作・インストールに関する知見（手動フォルダコピーではextensions.json未登録のため認識されない問題と、vsce package + code --install-extensionによる正式インストール手順） |
+
 ### Windows
 
 | ファイル | 概要 |
