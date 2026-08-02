@@ -43,6 +43,7 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 | ファイル | 概要 |
 |---|---|
 | Windows_Explorer_IconCache_Tips.md | アイコンキャッシュクリア・explorer.exe 再起動の知見（Windows 11 で ie4uinit.exe が無い場合の代替手順、Stop-Process -Force 再起動でタスクバーが消えるケースの診断・復旧） |
+| Windows_SendInput_PInvoke_Tips.md | SendInput/ToUnicodeのP/Invoke落とし穴（ToUnicodeのCharSet未指定でキー→文字変換が壊れる、INPUT共用体のSize未指定でSendInputがERROR_INVALID_PARAMETER、KEYEVENTF_UNICODEで改行文字が無視される 等） |
 | PowerShell_Tips.md | PowerShellの仕様の罠（Sort-Objectの複数プロパティ指定、ConvertTo-Jsonの1件/0件配列の挙動、パイプライン0件代入の$null化、Windows PowerShell 5.1でのBOMなしUTF-8スクリプト文字化け 等） |
 
 ### Google
