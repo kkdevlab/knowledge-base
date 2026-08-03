@@ -1,6 +1,6 @@
 # Notion MCP ツール Tips & 注意点
 
-最終更新: 2026-07-01
+最終更新: 2026-08-03
 
 Claude.ai / Claude Code から Notion MCP ツールを使う際のナレッジ集。
 実際の作業で発生したエラーと正しい対処法をまとめる。
@@ -355,6 +355,33 @@ Cannot update color of select with name: Tasker.
 3. 作成・修正後は必ず`notion-fetch`でタイトル・主要プロパティが実際に反映されているか確認する（成功レスポンスだけでは判断しない）
 
 **教訓**: `create-pages`の成功レスポンスは「ページが作られたこと」の保証であって、「意図した場所・プロパティで作られたこと」の保証ではない。DB配下作成のつもりなら`parent`指定の有無をセルフチェックし、作成後は`notion-fetch`で裏取りする。
+
+---
+
+## 14. create-pages で parent を pages 配列の各要素に入れるとエラー
+
+### 症状
+
+`notion-create-pages`で、`parent`を`pages`配列の各アイテム(properties/contentと同じ階層)に入れて呼び出すと、次のバリデーションエラーになる。
+
+```
+Invalid arguments for tool notion-create-pages: Unrecognized key: "parent"
+```
+
+### 原因
+
+`parent`は`pages`配列の各要素のプロパティではなく、ツール呼び出し全体のトップレベルパラメータ。1回の呼び出しで作成する複数ページは同じ親を共有する設計のため、`parent`は`pages`と同階層に1つだけ渡す。
+
+```json
+{
+  "pages": [{"properties": {...}, "content": "..."}],
+  "parent": {"type": "data_source_id", "data_source_id": "xxxxx"}
+}
+```
+
+### 関連
+
+項目13(`parent`を省略した場合は無言でスタンドアロンページになる)とは異なり、こちらは即座にエラーで気づける。
 
 ---
 
