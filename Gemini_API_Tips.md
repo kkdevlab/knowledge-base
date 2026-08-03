@@ -56,6 +56,27 @@ Google Gemini API (`generativelanguage.googleapis.com`) の generateContent REST
 
 - APIキーは `x-goog-api-key` ヘッダーで渡せる（`?key=`クエリパラメータに書くとログ・URL履歴に残りやすいので、可能ならヘッダー方式を優先）
 
+## Gemini CLIは実在した。ただしAntigravity CLIへ移行済み（2026-06-18〜）
+
+- Gemini自身に「CodexやClaude Codeのようにコマンドから使えるものはあるか」と質問すると、時期によっては「専用CLIは存在しない、APIを使うしかない」という誤った趣旨の回答を返すことがある。実際には`google-gemini/gemini-cli`（`npm install -g @google/gemini-cli`）という公式OSSのCLIが2025年6月頃から存在し、`gemini -p "prompt"`のようなヘッドレス実行（非対話モード）も可能だった
+- Googleは2026年5月19日のGoogle I/Oで開発者向けツールを「Antigravity」ブランドへ統合すると発表し、単体のGemini CLIとGemini Code Assist IDE拡張機能を廃止する方針を示した
+- **2026年6月18日**、Google AI Pro/Ultra契約者向け、および無料のGemini Code Assist個人利用者向けのGemini CLI提供が終了した。Gemini Code Assist Standard/Enterpriseライセンス、またはGoogle Cloud経由のGemini Code Assist for GitHubを使っている組織は、引き続き従来のGemini CLIを利用できる
+- 移行先はクローズドソース・Go言語製の新バイナリ「Antigravity CLI」（コマンド名`agy`）。設定ファイルの配置やコマンド体系は作り直されており、単純な上位互換ではなく別物として扱う必要がある
+
+### Antigravity CLI（agy）のヘッドレス実行
+
+- `agy -p "prompt"`（`--prompt`/`--print`でも可）で非対話モードとして実行でき、スクリプトやCI/自動化に組み込める
+- `--output-format`で構造化出力も可能
+- ヘッドレスでは対話的な確認プロンプトが出ないため、ファイル編集等を無人実行させたい場合は`--mode=accept-edits`のような明示指定が必要（無指定だとGitHub Actions等で確認待ちのままハングする）
+
+### Antigravity CLIの無料枠（2026-08時点）
+
+- 無料プラン（$0、クレジットカード登録不要）があるが、Antigravity全体（IDE+CLI共有）で**1日20リクエスト**（5時間ごとのローリング更新、かつ1分5リクエストまで）とかなり少ない
+- 2025年11月ローンチ時点は250リクエスト/日だったが、2025年12月までに20リクエスト/日へ92%削減された経緯がある
+- 有料プランはAI Pro（月額20米ドル）、AI Ultra（新設の月額100米ドルプランと、250→200米ドルへ値下げされた上位プラン）。プラン内枠を使い切ると1クレジット=0.01米ドルの従量課金（2万クレジットを199米ドルでバルク購入可）に切り替わる
+- Google自身「現在の無料提供が長期モデルを反映しているとは限らない」と明言しており、今後さらに縮小・変更される可能性がある
+- これはGemini API単体の無料枠（`generateContent`のモデルごとの日次RPD、例: `gemini-3.5-flash`は20回/日）とは別の仕組み。API経由で使う場合は引き続きAPI側の無料枠がそのまま適用される
+
 ## classic generateContent（REST）のTool objectフィールド名はcamelCase
 
 - 新しい「Interactions API」（`/v1beta/interactions`）のドキュメント例では`{"type": "google_search"}`のようなsnake_caseの表記が出てくるが、従来の`/v1beta/models/{model}:generateContent`エンドポイントではフィールド名はcamelCaseになる
@@ -82,3 +103,4 @@ Google Gemini API (`generativelanguage.googleapis.com`) の generateContent REST
 ---
 *(2026-07-12 DocomoMailGuard Gemini版構築時に実地確認)*
 *(2026-07-17 PromptRunner ai-news統合・effort機能追加時に実地確認)*
+*(2026-08-03 Gemini CLI/Antigravity CLIの存在・移行経緯・無料枠をWeb調査で確認)*
