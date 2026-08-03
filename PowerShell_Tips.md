@@ -168,3 +168,21 @@
   if (-not $errorDetail) { $errorDetail = $_.Exception.Message }
   ```
 - **注意**: `$_.ErrorDetails.Message`を直接使っているコードはStrictMode環境では同じ危険がある。HTTPレスポンス以外の失敗（タイムアウト等）が起きうるすべての`Invoke-RestMethod`/`Invoke-WebRequest`のcatchで同様のガードを入れること
+
+---
+
+## 2026-08-03: Set-StrictMode下でParser::ParseFileに未宣言変数へ[ref]を渡すとエラーになる
+
+- **エラー内容**: `[ref] cannot be applied to a variable that does not exist.`
+- **原因**: `Set-StrictMode -Version Latest`が有効な状態で、`[System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors)`のように、事前に`$errors`変数を宣言せず`[ref]`へ直接渡すと、StrictModeが「存在しない変数への参照」としてエラーにする
+- **解決方法**: 呼び出し前に`$errors = $null`等で変数を明示的に初期化してから`[ref]$errors`を渡す
+- **備考**: 構文解析のみを目的とした一時スクリプトでも発生するため、Parserクラスを使う一時検証コードでは特に注意
+
+---
+
+## 2026-08-03: PowerShellで[int]$nullは例外を投げず0になる（オプション項目の欠如を無音で握りつぶす）
+
+- **エラー内容**: なし（エラーは出ないが、意図しない値になる）
+- **原因**: ハッシュテーブル・YAML等から読んだ任意項目のキーが存在しない場合、`$hashtable['key']`は`$null`を返す。`Set-StrictMode`は未宣言"変数"は検知するが、ハッシュテーブルの存在しないキー参照は検知しない。その`$null`を`[int]`へキャストすると例外を投げず`0`になる
+- **解決方法**: 任意項目を数値として使う場合、`if ($hashtable.ContainsKey('key') -and $hashtable['key']) { [int]$hashtable['key'] } else { <既定値> }`のように、キャスト前に存在確認と既定値へのフォールバックを明示する
+- **備考**: `PromptRunner`の`timeoutSec`省略時に「即タイムアウトする」不具合として実際に発見。タイムアウト秒数のように「0だと即座に破綻する」値を扱う箇所は特に注意
