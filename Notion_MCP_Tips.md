@@ -330,6 +330,34 @@ Cannot update color of select with name: Tasker.
 
 ---
 
+## 13. create-pages で parent を省略すると、DBプロパティが無言で無視される
+
+### 症状
+
+`notion-create-pages`でデータベース配下のページを作るつもりで、プロパティ（select/relation等）を指定して呼び出したが、`parent`（`data_source_id`）を渡し忘れた。エラーは一切出ず成功レスポンスが返るが、実際にはタイトルもプロパティも全て空のスタンドアロンページとして作成される。
+
+### 原因
+
+`parent`を省略すると、そのページは「データベース配下」ではなく「ワークスペース直下のスタンドアロンページ」として扱われる。スタンドアロンページが受け付けるプロパティは`title`のみのため、DB用のプロパティ（select/relation/date等）は黙って無視される。
+
+作成後に同じページへ`notion-update-page`（`update_properties`）で同じプロパティを送っても、ページがスタンドアロンのままである限り同様に無視される（エラーにもならない）。
+
+### 正しい手順
+
+1. `notion-create-pages`実行前に、必ず`parent`に`data_source_id`を指定する
+   ```json
+   {"parent": {"type": "data_source_id", "data_source_id": "xxxxx"}, "pages": [...]}
+   ```
+2. うっかり`parent`を省略して作成してしまった場合は、`notion-move-pages`で対象データソース配下へ移動してから、`update_properties`でプロパティを再設定する
+   ```json
+   {"page_or_database_ids": ["<page_id>"], "new_parent": {"type": "data_source_id", "data_source_id": "xxxxx"}}
+   ```
+3. 作成・修正後は必ず`notion-fetch`でタイトル・主要プロパティが実際に反映されているか確認する（成功レスポンスだけでは判断しない）
+
+**教訓**: `create-pages`の成功レスポンスは「ページが作られたこと」の保証であって、「意図した場所・プロパティで作られたこと」の保証ではない。DB配下作成のつもりなら`parent`指定の有無をセルフチェックし、作成後は`notion-fetch`で裏取りする。
+
+---
+
 ## まとめ: データ操作の安全な手順
 
 ```
