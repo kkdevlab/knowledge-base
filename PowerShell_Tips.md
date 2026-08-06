@@ -186,3 +186,21 @@
 - **原因**: ハッシュテーブル・YAML等から読んだ任意項目のキーが存在しない場合、`$hashtable['key']`は`$null`を返す。`Set-StrictMode`は未宣言"変数"は検知するが、ハッシュテーブルの存在しないキー参照は検知しない。その`$null`を`[int]`へキャストすると例外を投げず`0`になる
 - **解決方法**: 任意項目を数値として使う場合、`if ($hashtable.ContainsKey('key') -and $hashtable['key']) { [int]$hashtable['key'] } else { <既定値> }`のように、キャスト前に存在確認と既定値へのフォールバックを明示する
 - **備考**: `PromptRunner`の`timeoutSec`省略時に「即タイムアウトする」不具合として実際に発見。タイムアウト秒数のように「0だと即座に破綻する」値を扱う箇所は特に注意
+
+---
+
+## 2026-08-06: wingetのMicrosoft.PowerShellパッケージはmsixインストールとなり、Program Filesに実体を持たないことがある
+
+- **内容**: `winget install --id Microsoft.PowerShell`は環境によってmsixインストーラー（`PowerShell-x.x.x.msixbundle`）が既定で選ばれることがあり、その場合`pwsh.exe`の実体は`C:\Program Files\PowerShell\7\`ではなく、ユーザーごとの`%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe`（App Execution Alias経由）に配置される
+- **影響**: 過去のノウハウ（本ファイル2026-07-14・2026-07-17エントリ等）で前提としていた`"C:\Program Files\PowerShell\7\pwsh.exe"`のハードコードパスは、msixインストール環境では存在せず失敗する
+- **対処**: pwshを起動するスクリプト・タスクスケジューラのActionでは、フルパスをハードコードせず`pwsh.exe`（PATH解決）で呼び出す。`WScript.Shell.Run`等の非対話起動でもPATH解決は機能することを確認済み（App Execution Alias自体が通常のPATH経由で解決される）
+- **確認方法**: `winget show --id Microsoft.PowerShell --source winget`の`Installer Type`が`msix`かどうかで判別できる
+
+---
+
+## 2026-08-06: 非対話セッションでInstall-Moduleを初回実行するとNuGetプロバイダーのプロンプトで失敗する
+
+- **エラー内容**: `Install-Module -Name <module> -Scope CurrentUser`を、NuGetパッケージプロバイダー未導入の環境で非対話的に実行すると `Install-NuGetClientBinaries : Exception calling "ShouldContinue"...: "Windows PowerShell is in NonInteractive mode. Read and Prompt functionality is not available."`で失敗する
+- **原因**: 初回の`Install-Module`はNuGetプロバイダーの導入確認を対話プロンプトで行おうとするが、非対話セッションでは応答できず例外になる
+- **解決方法**: 事前に`Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser`を実行してからInstall-Moduleを呼ぶ（`-Force`で確認プロンプトを省略）
+- **備考**: PowerShell 7 (`pwsh.exe`)側とWindows PowerShell 5.1側でモジュールの既定インストール先パスが異なる（それぞれ`Documents\PowerShell\Modules`と`Documents\WindowsPowerShell\Modules`）。両エディションで同じモジュールを使いたい場合は、対象のpwsh/powershell実行ファイルから直接`Install-Module`を呼ぶこと
