@@ -199,6 +199,24 @@ Join（joaoapps）で **PC と Android(Tasker) を双方向に連携**させる�
 
 ---
 
+## 9. 2026-08-07: 認証ループが新PC(KK-MAIN)で再発、今回の真因はサードパーティCookieブロック（§8とは別原因）
+
+- **エラー**: `https://joinjoaomgcd.appspot.com/?settings&connectoport=9876` でGoogle Sign In → アカウント選択 →
+  (時にはGoogle Drive appfolderへの同意画面まで進み許可しても) Joinのトップページに戻り、
+  ログインボタンが再表示される無限ループ。§8の「通知許可の自動ブロック」とは別環境(新PC・新Chromeプロファイル)で発生。
+- **原因**: Chromeの「サードパーティ Cookie をブロックする」設定。Joinのログインは`gsiwebsdk=2`（旧Google Sign-In
+  JSライブラリ、`gapi.auth2`系）と`response_type=permission id_token`を使うハイブリッドOAuthフローで、
+  3rd-partyクッキーに依存する。ブロックされていると認証自体は裏で成立して見えても、フロントエンドが
+  結果を受け取れず「未ログイン」表示に戻る。ログイン画面には最初から「Make sure to allow cookies and
+  popups」と表示されていた。
+- **正解**: `chrome://settings/content/thirdPartyCookies` でサードパーティCookieを許可（または対象サイトを
+  例外に追加）してから再ログイン。参考: GitHub `joaomgcd/JoinDesktop` issue #77（2025-07、同一症状・同一解決策）。
+- **注意**: §8の「通知許可ブロック」とこの「サードパーティCookieブロック」は**どちらもJoinの認証ループの
+  原因になり得る**。再発時は両方を順に疑うこと（① 通知許可設定 → Block なら Ask/Allow に変更、
+  ② サードパーティCookie設定 → ブロックなら許可）。
+
+---
+
 ## 7. 参考
 
 - ソース: `github.com/joaomgcd/JoinDesktop`（Electron Desktop）/ `github.com/joaomgcd/JoinChrome`（拡張）。
