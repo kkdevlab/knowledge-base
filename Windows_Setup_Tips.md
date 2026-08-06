@@ -18,3 +18,11 @@
   & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe" modify --installPath "C:\Program Files\Microsoft Visual Studio\2022\Community" --add Microsoft.VisualStudio.Workload.ManagedDesktop --includeRecommended --passive --norestart --wait
   ```
 - **注意**: `vs_installer.exe modify`は`--wait`を付けても、実際のパッケージダウンロード・インストールは別プロセス(`setup.exe`)にハンドオフされ、コマンド自体はハンドオフ完了時点で終了扱いになることがある。`Get-Process -Name setup`で実プロセスの終了を待ち、`vswhere -format json`の`isComplete`/`isLaunchable`で真の完了を確認すること
+
+---
+
+## schtasks /run はタスクが既に実行中だと新プロセスを起動しない
+
+- **症状**: `schtasks /create /f`でタスク定義（実行ファイルパス等）を更新した直後に`schtasks /run`で動作確認しても、更新前の設定で起動した既存プロセスがそのまま応答し、変更が反映されているように見えない
+- **原因**: `schtasks /run`は対象タスクが既に実行中の場合、新しいプロセスを起動せず「currently running」を返すのみ。ログオン時トリガー等で既に起動済みのプロセスは、タスク定義を後から更新しても自動では再起動されない
+- **解決方法**: 定義変更後の動作確認では、対象プロセスを`Stop-Process`等で明示的に終了させてから`schtasks /run`を実行する
