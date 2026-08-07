@@ -217,6 +217,70 @@ Join（joaoapps）で **PC と Android(Tasker) を双方向に連携**させる�
 
 ---
 
+## 10. 2026-08-07: PC移行後、中継が「設定は正しいのに動かない」ように見えた調査（`gcm.js`内部構造とデバッグ手法）
+
+### 前提：PC移行時は`pushDevices`（送信先デバイスID）の再登録が必須
+
+旧PCのChrome拡張機能デバイスは、PCごとJoinの別デバイスとして再登録される（`devices.html`の一覧はGoogleアカウント単位でデバイスIDが振られるため、同じ拡張でも新PCでは新しいdeviceId・新しいdeviceNameになる）。
+Tasker側（`Sub_Join_Cmd.tsk.xml`等）で`pushDevices`にハードコードしていた旧PCのdeviceIdは、旧PC故障後はJoin側にそのデバイス自体が存在しなくなる。**PC移行時は必ず`.../registration/v1/listDevices?apikey=...`で現在のデバイス一覧を取り、新PCのChrome拡張デバイスID（例: `kk-main-chrome`）に更新すること**（送信に使うのはlong hexの`deviceId`フィールド、`id`は内部IDで送信不可、§7参照）。
+
+### 設定（Port 9876 + Send Full Push ON）が本当に正しいかの確認方法
+
+`options.html`のADVANCEDタブ「EventGhost, Node-RED」で設定した値（`eventghostport`・`redirectionfullpush`）は、**`localStorage`に平文で保存される**（v2の`join_settings` Dexie/IndexedDBではない。v2 Dexieは§0で判明済みの「死んだ設定」用）。設定が反映されているか確認するには、拡張のいずれかの検証ビュー（`join.html`等）のConsoleで：
+
+```js
+console.log(localStorage.eventghostport, localStorage.redirectionfullpush);
+```
+
+`chrome.storage.local`はこの拡張には`storage`権限が無く使えない（`Cannot read properties of undefined`エラーになる）。
+
+### `gcm.js`の受信処理の実際のコード（1.9.3、`GCMPush.execute()`抜粋）
+
+拡張機能のインストール先（`%LOCALAPPDATA%\Google\Chrome\User Data\<Profile>\Extensions\<拡張ID>\<version>\js\gcm.js`）から直接読める。要点：
+
+```js
+this.execute = function () {
+    decryptFields(this.push);          // localStorage.encryptionPasswordが無ければ何もしない（暗号化未使用なら無害）
+    ...
+    console.log("Received push!!");
+    if (this.push.text) {
+        var eventGhostPorts = getEventghostPort();      // localStorage["eventghostport"]を読む（optionsaver.js）
+        var eventGhostServer = getEventghostServer() || "localhost";
+        if (eventGhostPorts) {
+            eventGhostPorts = eventGhostPorts.split(",");
+            for (var eventGhostPort of eventGhostPorts) {
+                var redirectFullPush = getRedirectFullPush();  // localStorage["redirectionfullpush"]
+                if (!redirectFullPush) {
+                    // XHR GET（EventGhost用の簡易通知）
+                } else {
+                    // Join Desktop用：POST（Content-Typeあり、mode指定なし＝通常のCORSリクエスト）
+                    fetch(`http://${eventGhostServer}:${eventGhostPort}/push`, {
+                        method: 'POST', body: this.toGcmRawString(),
+                        headers: {'Content-Type': 'application/json'}
+                    });  // ← catch無し、投げっぱなし
+                }
+            }
+        }
+    }
+    ...
+    var googleDriveManager = new GoogleDriveManager();
+    googleDriveManager.addPushToMyDevice(this.push);  // push履歴をGoogle Driveへ保存（本題の中継とは別機能、常に実行される）
+}
+```
+
+**`fetch()`に`mode:'no-cors'`が付いていない**。localhostへの素のCORS POSTだが、Join Desktop側の`/push`エンドポイントは正常にCORSへ応答するため（実機確認済み、200 OK）、これ自体は問題にならない。
+
+### 詰まった原因（今回の実例）と教訓
+
+今回、「設定値は全部正しい」「`fetch`直前の行にブレークポイントを置いても変数は正常」「手動で全く同じ`fetch()`を打つと成功する」のに、Networkタブには何回試しても該当リクエストが1件も表示されない、という一見矛盾した状態にハマった。
+
+- **原因は最終的にJoin側ではなく別問題（`Build-MobileViewer.ps1`が参照する`C:\rclone\rclone.exe`が新PCに未導入）だったと判明**。実際にはコマンド自体はPCまで届いて実行されていた（`PromptRunner/logs/*.log`に「開始」ログは記録されていたが、フェーズの途中でエラー終了しており、Join側の中継は最初から成功していた）。
+- **教訓1**: Chrome拡張機能のoffscreen文書（`join.html`）はpush受信のたびに破棄・再生成される（`service_worker.js`に"existing offscreen document closed"→"Offscreen document created successfully"のログが出る）。このライフサイクルの影響か、DevToolsのNetworkタブでの目視確認は「Preserve log」をONにしても信頼できない場合がある。**fetchの成否を確認したいときは、Networkタブより先にPC側の一次情報（対象スクリプトのログファイル、`%APPDATA%\Join Desktop\notifications.json`）を確認する方が確実**。
+- **教訓2**: 送信元スクリプト自体に、モジュール読み込み等より前の「起動しました」ログと、成功/失敗を問わない`finally`での「終了しました」ログを最低限入れておくと、「Join側の中継が失敗しているのか」「PC側スクリプトの後続処理で落ちているのか」の切り分けが一瞬で終わる（`PromptRunner/src/Build-MobileViewer.ps1`に実装済み。他のJoin起動スクリプトにも同様のパターンを推奨）。
+- **教訓3**: 拡張機能のソースは`chrome://extensions`のUIから読むよりも、**PC上の実ファイル**（`%LOCALAPPDATA%\Google\Chrome\User Data\<Profile>\Extensions\<拡張ID>\<version>\`）を直接grepする方が、DevToolsの全ファイル検索（Ctrl+Shift+F）が効かない場合の確実な代替手段になる。
+
+---
+
 ## 7. 参考
 
 - ソース: `github.com/joaomgcd/JoinDesktop`（Electron Desktop）/ `github.com/joaomgcd/JoinChrome`（拡張）。
