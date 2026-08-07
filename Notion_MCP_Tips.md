@@ -385,6 +385,53 @@ Invalid arguments for tool notion-create-pages: Unrecognized key: "parent"
 
 ---
 
+## 15. update-page は必ず `command` パラメータが必要（省略するとバリデーションエラー）
+
+### 症状
+
+`notion-update-page`を`page_id`と`properties`だけのフラットな引数で呼び出すと、次のエラーになる。
+
+```
+Input validation error: Invalid arguments for tool notion-update-page: page_id: Invalid input: expected string, received undefined, command: Invalid option: expected one of "update_properties"|"update_content"|"replace_content"|"insert_content"|"apply_template"|"update_verification"
+```
+
+### 原因
+
+`notion-update-page`は複数の更新モードを1つのツールに集約しており、`command`でどのモードか明示する設計。プロパティだけ更新するつもりでも`command: "update_properties"`は省略できない。
+
+### 正しい形式
+
+```json
+{
+  "page_id": "xxxxx",
+  "command": "update_properties",
+  "properties": {"ステータス": "進行中"}
+}
+```
+
+---
+
+## 16. update_content の old_str は「fetchで返ってくる表示用テキスト」と一致しないことがある
+
+### 症状
+
+`notion-fetch`で取得したページ本文（`text`フィールド）から`old_str`をコピーして`update_content`（部分置換）を呼ぶと、次のように「一致なし」エラーになることがある。
+
+```
+No matches found for <old_strに指定した文字列>.
+```
+
+### 原因
+
+`notion-fetch`が返す`text`は、リンク等を読みやすく変換した**表示用テキスト**であり、実際にNotion側に保存されている生Markdownと文字列表現が異なる場合がある（特にURLを含むリンク周辺）。
+
+### 対処法
+
+- 部分置換（`update_content`）で原因不明の不一致が出たら、深追いせず`replace_content`（本文全体を書き換え）に切り替える方が確実
+- 特にリンクを含む段落を`old_str`に使うのは避け、リンクを含まない前後の短い文だけで囲む方が一致しやすい
+
+---
+
 ## まとめ: データ操作の安全な手順
 
 ```
