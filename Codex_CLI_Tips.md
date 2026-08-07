@@ -73,3 +73,24 @@
 - **AGENTS.mdとの違い**: `model_instructions_file`はその実行1回だけに効く一時的な指定。プロジェクト配下やホームディレクトリ(`~/.codex/AGENTS.md`)の自動読込ファイルとは別物で、非対話スクリプト実行の文脈では明確に区別する
 - **結果の取得**: `-o` / `--output-last-message <path>`で最終応答をファイルに書き出すのが定番(標準出力にも出るが、パースするならこちらが確実)
 - **Claude Code CLIとの対比**: Claude Codeは`--system-prompt-file`という専用フラグを持つが、Codexは汎用の`-c model_instructions_file=`経由という設計の違いがある
+
+---
+
+## 2026-08-07: Windows版でサンドボックス補助バイナリが見つからずコマンド実行が全滅する
+
+- **内容**: `codex exec --sandbox workspace-write`（または`read-only`）実行時、シェルコマンドを1つも実行できず失敗する。エラーメッセージは以下の通り
+  ```
+  ERROR codex_core::exec: exec error: windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=..., log=..., error=program not found
+  ```
+- **原因**: Windows版スタンドアロンCLIのインストーラー/自動更新が、サンドボックス補助バイナリ(`codex-windows-sandbox-setup.exe`・`codex-command-runner.exe`)を`%LOCALAPPDATA%\Programs\OpenAI\Codex\bin`（探索対象パス）ではなく、`~\.codex\packages\standalone\releases\<バージョン>-x86_64-pc-windows-msvc\codex-resources\`配下にのみ展開する。OpenAI公式リポジトリで既知のリグレッション（[openai/codex#28457](https://github.com/openai/codex/issues/28457) など、0.138.0以降で複数報告）
+- **確認方法**: `Get-ChildItem "$env:LOCALAPPDATA\Programs\OpenAI\Codex\bin"`（実体は`~\.codex\packages\standalone\current\bin`へのシンボリックリンク）に`codex-windows-sandbox-setup.exe`が無いことを確認。`~\.codex\packages\standalone\releases\<現在のバージョン>-x86_64-pc-windows-msvc\codex-resources\`には存在する
+- **対処**: 該当2ファイルを`bin`ディレクトリへコピーする
+  ```powershell
+  $ver = (codex --version) -replace 'codex-cli ', ''
+  $src = "$env:USERPROFILE\.codex\packages\standalone\releases\$ver-x86_64-pc-windows-msvc\codex-resources"
+  $dst = "$env:LOCALAPPDATA\Programs\OpenAI\Codex\bin"
+  Copy-Item "$src\codex-windows-sandbox-setup.exe" $dst
+  Copy-Item "$src\codex-command-runner.exe" $dst
+  ```
+- **注意**: `--sandbox danger-full-access`（サンドボックスなし）に逃げるのではなく、上記コピーでサンドボックス自体を正常化すること。コピー先はシンボリックリンク先＝バージョンディレクトリなので、**Codex CLIが新バージョンへ自動更新されるたびに再発しうる**（新しい`releases/<新バージョン>/`が作られ、`current`のリンク先が切り替わるため）。同じエラーが出たら毎回この手順を再実行すればよい
+- **確認済みバージョン**: codex-cli 0.147.0（Windows, スタンドアロン版）
