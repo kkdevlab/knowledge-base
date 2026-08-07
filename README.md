@@ -31,6 +31,7 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 | ファイル | 概要 |
 |---|---|
 | Claude_Code_MCP_Connection_Tips.md | Claude Code (VS Code拡張) のMCPサーバー接続タイミング問題（セッション開始直後は未接続のMCPがそのチャット内では回復しない仕組み・関連GitHub Issue・対処法として採用したセッション開始チェックの設計） |
+| Claude_Code_Memory_Path_Tips.md | Claude Code（CLI/VS Code拡張共通）のメモリー保存先の仕組み（作業ディレクトリの絶対パスをエンコードしたキーで保存されるため、プロジェクトフォルダをリネーム/移動すると別プロジェクト扱いになり既存メモリーが見えなくなる問題と復旧手順） |
 
 ### VS Code
 

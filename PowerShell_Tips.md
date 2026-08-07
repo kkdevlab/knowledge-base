@@ -204,3 +204,15 @@
 - **原因**: 初回の`Install-Module`はNuGetプロバイダーの導入確認を対話プロンプトで行おうとするが、非対話セッションでは応答できず例外になる
 - **解決方法**: 事前に`Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser`を実行してからInstall-Moduleを呼ぶ（`-Force`で確認プロンプトを省略）
 - **備考**: PowerShell 7 (`pwsh.exe`)側とWindows PowerShell 5.1側でモジュールの既定インストール先パスが異なる（それぞれ`Documents\PowerShell\Modules`と`Documents\WindowsPowerShell\Modules`）。両エディションで同じモジュールを使いたい場合は、対象のpwsh/powershell実行ファイルから直接`Install-Module`を呼ぶこと
+
+---
+
+## 2026-08-07: Set-ScheduledTaskが「アクセスが拒否されました」で失敗する
+
+- **エラー内容**: `Set-ScheduledTask -TaskName <name> -Action <action>`実行時に `Set-ScheduledTask: アクセスが拒否されました` で失敗する（非昇格PowerShellから実行した場合）
+- **原因**: タスクスケジューラーのタスク定義（Actionのパス等）を変更する操作には管理者権限が必要。`Get-ScheduledTask`等の参照系は非昇格でも可能だが、`Set-ScheduledTask`のような変更系はUAC昇格が必須
+- **解決方法**: 昇格PowerShellを`Start-Process -Verb RunAs`で起動し、その中で`Set-ScheduledTask`を実行する。UAC承認（ユーザーによる「はい」クリック）が必要
+  ```powershell
+  Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','<修正処理を書いたps1のフルパス>' -Wait
+  ```
+- **注意**: 昇格プロセスは別ウィンドウ・別プロセスとして起動されるため、呼び出し元から標準出力を直接受け取れない。実行結果を確認したい場合は、昇格側のスクリプト内で結果をログファイルに書き出し、`-Wait`で完了を待ってから呼び出し元でログファイルを読む方式が有効
