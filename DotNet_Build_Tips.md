@@ -123,3 +123,29 @@ Write-Output "$($icon.Width)x$($icon.Height)"  # 期待値24と異なれば別�
   dotnet build
   ```
 - **備考**: コード変更（C#ファイルの編集のみ）とは無関係に発生することがある。ビルドエラーの原因調査より先に一度クリーンビルドを試す価値がある
+
+---
+
+## dotnet build単独実行時、csprojのx64フォールバックが効かずarm64ビルドになる
+
+### 症状
+- csprojに `<Platforms>x86;x64;arm64</Platforms>` と、Platform未指定時はx64にするフォールバック
+  ```xml
+  <Platform Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</Platform>
+  ```
+  を書いていても、`dotnet build` を引数なしで実行すると `bin\arm64\...` に出力される
+- **ホストのCPUアーキテクチャとは無関係に発生する**。ARM64機種（Snapdragon搭載Copilot+ PC等）だけでなく、x64機種（AMD Ryzen AI 5 340搭載機）でも同様にarm64が選ばれることを確認済み
+
+### 原因
+複数Platform指定のWinUI/.NET SDKプロジェクトで`dotnet build`に明示的な`-p:Platform`を渡さない場合、MSBuildの既定Platform解決処理がcsproj側の「空 or AnyCPUならx64」という条件式より先に働き、`<Platforms>`列挙の中からarm64を選んでしまう。SDK内部のどの処理がこれを行っているかは未特定（ホストアーキテクチャによる分岐ではないことのみ確認済み）。
+
+### 解決方法
+ビルド時にPlatformを明示指定する。
+
+```powershell
+dotnet build -p:Platform=x64
+```
+
+### 備考
+- VS CodeのC# Dev Kit拡張機能を使っている場合、ワークスペースを開くたびにバックグラウンドで`Platform`未指定の`dotnet restore`が自動実行され、同じ理屈でarm64の空`bin`/`obj`フォルダが自動生成されることがある（実害はなく`.gitignore`対象なら放置可）
+- 他プロジェクトとの出力構成（`bin\x64\...`）を揃えたい場合や、x64前提のツール連携がある場合は、常に`-p:Platform=x64`を付ける運用にするとよい
