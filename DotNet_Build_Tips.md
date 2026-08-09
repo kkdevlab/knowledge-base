@@ -110,3 +110,16 @@ Write-Output "$($icon.Width)x$($icon.Height)"  # 期待値24と異なれば別�
 ### 解決方法
 
 256px等の高解像度ソースから`16, 20, 24, 32, 40, 48, 64, 96, 128, 256`の10サイズをLanczos等の高品質リサンプリングで生成し、icon.icoに含める（小サイズを拡大するのではなく、大サイズから縮小する）。
+
+---
+
+## WinUI3プロジェクトでdotnet buildがXamlCompiler.exeエラー(終了コード1)で失敗する
+
+- **エラー内容**: `Microsoft.UI.Xaml.Markup.Compiler.interop.targets` 内で `XamlCompiler.exe "obj\...\input.json" "obj\...\output.json"` がコード1で終了、MSB3073エラー
+- **原因**: `obj/`配下のXAMLコンパイラ用キャッシュ(input.json/output.json等)が古い/破損した状態になっている
+- **解決方法**: `obj/`・`bin/`を削除してクリーンビルドする
+  ```powershell
+  Remove-Item -Recurse -Force obj, bin
+  dotnet build
+  ```
+- **備考**: コード変更（C#ファイルの編集のみ）とは無関係に発生することがある。ビルドエラーの原因調査より先に一度クリーンビルドを試す価値がある

@@ -35,3 +35,13 @@
 - **原因**: OneDriveのKnown Folder Move(KFM)は、Windows/OneDriveからの「バックアップしましょう」通知への誤承諾や、OneDriveクライアントの再起動・再同期のタイミングで再度有効化されることがある
 - **対処**: リネーム作業中はOneDriveの「バックアップの管理」で都度Documentsのバックアップ状態を確認する。重複してできた空フォルダ（実データが無く`desktop.ini`とショートカットのみ）は、OneDriveが裏側で自動的に整理・削除する場合がある。手動削除しようとする前に少し待って（数分〜PC再起動後）再確認するとよい
 - **備考**: フォルダリネーム自体もOneDriveの同期プロセスと衝突しやすい。対象フォルダを開いているアプリ（VS Code等）を閉じるだけでは不十分で、PCの再起動が必要になる場合がある
+
+---
+
+## OneDriveの「重要なフォルダーのバックアップ」の対象範囲とデスクトップの表示の仕組み
+
+- **仕様**: OneDriveの「重要なフォルダーのバックアップ」(KFM)はDesktop/Documents/Picturesの3つのみが対象。`%LocalAppData%`・`%APPDATA%`・`%UserProfile%`直下は対象外
+- **確認方法**: レジストリ `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders` の `Desktop`値でOneDrive配下にリダイレクトされているか確認できる
+- **デスクトップの見え方の罠**: エクスプローラーのデスクトップ画面には、個人の`OneDrive\Desktop`と`C:\Users\Public\Desktop`(全ユーザー共通)の中身が重ねて表示される。「デスクトップがパブリックになっている」ように見えても、実際は2つのフォルダの表示が重畳しているだけで、個人のOneDriveデスクトップは正しく機能していることが多い
+- **アプリのインストール時の分岐**: インストーラーで「全ユーザー用」を選ぶ(または管理者権限で実行)と、ショートカットはPublicデスクトップ・共通スタートメニュー(`C:\ProgramData\...`)に作成され、インストール先も`Program Files`直下になる。「自分のみ」を選ぶと個人デスクトップ・`AppData\Local`配下になる
+- **注意**: アプリの設定・データ(`%LocalAppData%`等)自体もこのバックアップ対象外のため、個人データの保護が必要なアプリは別途対応が必要（kklabではgit root直下`config/`・`logs/`への保存に統一する方針。詳細: `kklab-rules/csharp/summary.md` 4.1章）
