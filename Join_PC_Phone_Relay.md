@@ -281,6 +281,40 @@ this.execute = function () {
 
 ---
 
+## 11. 2026-08-10: 初回起動時の "Error Loading Join Desktop (Timed out)" の真因とUI初期化専用エラーであること
+
+- **エラー内容**: Join Desktop起動直後（数秒後）に「Error Loading Join Desktop / Couldn't load the app. 
+  (Timed out). Please check your connection and try again.」ダイアログが表示される
+- **原因**: ソースコード（`appdashboard.js`）を確認したところ、`AppDashboard.load()`は起動処理全体を
+  try/catchで包んでおり、内部で発生した例外を種類を問わず全てこのダイアログとして表示する設計。今回は
+  `GoogleAccountDashboard.authToken`が、Electronメインプロセスへ保存済みGoogle認証トークンをIPC経由で
+  要求し（`window.api.send("authToken")`）、**5000ms（`EventBus.waitFor(AuthToken,5000)`）以内に応答が
+  無いと`v2/eventbus.js`が強制的に`"Timed out"`でreject**する。認証トークンのリフレッシュ通信が5秒を
+  超えた場合に発生する
+- **実害の有無**: このtry/catchはレンダラー側（デバイス一覧等のUI初期化）のみを対象にしており、実際の
+  プッシュ受信・コマンド実行はElectronメインプロセス側の別経路。実機検証で、このエラーが出た状態でも
+  Tasker→Join経由のコマンド受信・実行は正常動作することを確認済み（実害なし）
+- **既知のGitHub Issue**: `joaomgcd/JoinDesktop` issue #17（同一の5秒後発生パターン、開発者が
+  ネットワーク周りの改修で対応した実績あり）、issue #30（プロキシ環境）、issue #55（AV/ブラウザ通知
+  設定起因）。頻発する場合はプロキシ・ファイアウォール・AVによるGoogleサーバーへの通信妨害を疑う
+
+---
+
+## 12. 2026-08-10: 起動時に古い通知（Setting Clipboard等）が再表示されるのは仕様（未消去通知の同期）
+
+- **症状**: Join Desktop起動時、実際には何時間も前に発生したプッシュ（例: クリップボード同期の
+  「Setting Clipboard」通知）が今受信したかのように表示される
+- **原因**: `v2/notification/apphelpernotifications.js`の`refreshNotifications()`は、起動のたびに
+  `RequestStoredNotifications`をElectronメインプロセスへ問い合わせ、**「現時点でまだ未消去（Dismiss
+  されていない）の通知一覧」を毎回取得して表示する**仕様。新着プッシュだけを表示しているわけではない。
+  「Setting Clipboard」は`v2/gcm/apphelpergcm.js`の`handlePushClipboard`が`push.clipboard`受信時に
+  生成する通知
+- **正解**: バグではなく想定動作。「Dismiss Everywhere」で消去すれば、次回起動時はJoinサーバー側の
+  未消去リストから正しく消える（実機確認済み）。デスクトップアプリが長時間未起動だった場合、その間に
+  発生した未消去通知がまとめて再表示されるのは自然な挙動
+
+---
+
 ## 7. 参考
 
 - ソース: `github.com/joaomgcd/JoinDesktop`（Electron Desktop）/ `github.com/joaomgcd/JoinChrome`（拡張）。
