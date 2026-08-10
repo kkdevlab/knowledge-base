@@ -45,3 +45,11 @@
 - **デスクトップの見え方の罠**: エクスプローラーのデスクトップ画面には、個人の`OneDrive\Desktop`と`C:\Users\Public\Desktop`(全ユーザー共通)の中身が重ねて表示される。「デスクトップがパブリックになっている」ように見えても、実際は2つのフォルダの表示が重畳しているだけで、個人のOneDriveデスクトップは正しく機能していることが多い
 - **アプリのインストール時の分岐**: インストーラーで「全ユーザー用」を選ぶ(または管理者権限で実行)と、ショートカットはPublicデスクトップ・共通スタートメニュー(`C:\ProgramData\...`)に作成され、インストール先も`Program Files`直下になる。「自分のみ」を選ぶと個人デスクトップ・`AppData\Local`配下になる
 - **注意**: アプリの設定・データ(`%LocalAppData%`等)自体もこのバックアップ対象外のため、個人データの保護が必要なアプリは別途対応が必要（kklabではgit root直下`config/`・`logs/`への保存に統一する方針。詳細: `kklab-rules/csharp/summary.md` 4.1章）
+
+---
+
+## `python3`コマンドがWindows Store実行エイリアスに捕まり「見つかりません」と出る
+
+- **症状**: `python3 --version`を実行すると`Python was not found; run without arguments to install from the Microsoft Store...`と表示される。Pythonは実際にはインストール済み（`python --version`は正常に動く）
+- **原因**: Windows標準の「アプリ実行エイリアス」機能が`python3.exe`という名前のスタブを`WindowsApps`配下に用意しており、実体のPythonが`python.exe`としてしかPATHに登録されていない環境ではこのスタブが先に呼ばれてしまう
+- **対処**: このマシンでは`python3`ではなく`python`を使う
