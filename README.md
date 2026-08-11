@@ -20,6 +20,12 @@ raw URL 形式: `https://raw.githubusercontent.com/kkdevlab/knowledge-base/main/
 | DotNet_Build_Tips.md | .NET SDK / MSBuild のビルドに関する知見（ApplicationIcon が無言で埋め込まれない stale VBCSCompiler.exe 問題、実行中プロセスによるファイルロックで MSB3027 失敗、icon.ico のサイズ不足によるタスクバーのボケ 等） |
 | NAudio_CoreAudioApi_Tips.md | NAudio（Windows Core Audio API ラッパー）の知見（ドキュメントより先にDLLをリフレクションでAPI確認する手法、`OnSessionCreated`/`OnVolumeNotification`の正しいシグネチャ） |
 
+### Python
+
+| ファイル | 概要 |
+|---|---|
+| Python_SQLite_Tips.md | Python SQLiteの知見（context managerが接続自体を閉じない点、Windowsのファイルロック、読み取り専用ディレクトリ内のWALデータベースを安全にバックアップする手順） |
+
 ### Notion
 
 | ファイル | 概要 |
