@@ -61,3 +61,14 @@
 - **OneDrive内→外方向は不可**: OneDriveフォルダ「内」にjunctionを置き外部の実フォルダを参照する構成は、作成直後は正常に見えても、Windowsの`FindFirstChangeNotification`APIの制約でOneDriveがjunction先の変更を検知できなくなり、後日（実例では数日後）静かに通常フォルダへ差し戻される
 - **OneDrive外→内方向は可**: OneDriveフォルダの「外」にjunctionを置き、OneDrive「内」の実フォルダを参照する構成は問題なく機能する。OneDrive自身のツリー内にreparse pointが一切現れないため、上記の不具合が構造的に発生しない。junction経由の書き込みは即座にOneDrive側の実体に反映され、OneDriveも数秒でCloud Filter API経由の新規ファイルとして認識する（複数マシンでの運用実績あり）
 - **Files On-Demand関連**: `attrib +p /s <path>`でフォルダを再帰的に「常にこのデバイスに保持する」（ピン留め）状態にできる。ピン留め済みファイルも`ReparsePoint`属性を持つのは正常（OneDriveのCloud Filter APIによる管理マーク。クラウド専用＝未ダウンロードを意味しない）
+
+---
+
+## Gitリポジトリ配下の個別ファイルへのNTFSハードリンクは`git checkout`/`stash`/`rebase`で切れる
+
+- **症状**: `New-Item -ItemType HardLink`で作成した個別ファイルへのハードリンク（例: Gitリポジトリ内のファイルと、リポジトリ外の別パスを同一実体化する構成）が、作成直後は`fsutil hardlink list`で双方向のパスを正しく表示するのに、`git checkout`（ブランチ切り替え）・`git stash pop`・`git rebase`のいずれを実行した後には片方のパスしか表示されなくなる（`fsutil hardlink list`で1行しか出ない＝実体が分離した状態）
+- **原因は2つ複合**:
+  1. `core.autocrlf=true`の場合、gitがcheckout時にLF→CRLF変換のためファイル内容を書き直す。内容の実質差分はなくても、書き込みによって新しいファイル実体が作られハードリンクが切れる
+  2. `git rebase`はコミットを一度リセットして再生成するため、そのコミットで追加(`A`)されたファイルは「新規作成」として書き込まれる。この場合`.gitattributes`で`text eol=lf`を指定して改行コード変換を止めても、新規作成自体は避けられずハードリンクは切れる
+- **対処**: 改行コード変換対策として対象パスに`.gitattributes`で`* text eol=lf`を指定するのは無駄ではないが、rebase等によるファイル再生成には無力。個別ファイルの同一実体化が目的なら、**ハードリンク/シンボリックリンクではなく片方向コピー**（コミット前に都度`Copy-Item`等で上書き）を使う方が確実
+- **junctionとの違いに注意**: ディレクトリ単位のNTFS junctionは「OneDrive外→OneDrive内」方向なら安定して機能する（上記参照）。これは対象がディレクトリであり、git操作がその中の個別ファイルを書き換えてもjunctionという入れ物自体は影響を受けないため。個別ファイルへのハードリンクとは別物として扱うこと
