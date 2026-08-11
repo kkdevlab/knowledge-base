@@ -53,3 +53,11 @@
 - **症状**: `python3 --version`を実行すると`Python was not found; run without arguments to install from the Microsoft Store...`と表示される。Pythonは実際にはインストール済み（`python --version`は正常に動く）
 - **原因**: Windows標準の「アプリ実行エイリアス」機能が`python3.exe`という名前のスタブを`WindowsApps`配下に用意しており、実体のPythonが`python.exe`としてしかPATHに登録されていない環境ではこのスタブが先に呼ばれてしまう
 - **対処**: このマシンでは`python3`ではなく`python`を使う
+
+---
+
+## OneDriveとNTFSジャンクション: 方向によって挙動が真逆になる
+
+- **OneDrive内→外方向は不可**: OneDriveフォルダ「内」にjunctionを置き外部の実フォルダを参照する構成は、作成直後は正常に見えても、Windowsの`FindFirstChangeNotification`APIの制約でOneDriveがjunction先の変更を検知できなくなり、後日（実例では数日後）静かに通常フォルダへ差し戻される
+- **OneDrive外→内方向は可**: OneDriveフォルダの「外」にjunctionを置き、OneDrive「内」の実フォルダを参照する構成は問題なく機能する。OneDrive自身のツリー内にreparse pointが一切現れないため、上記の不具合が構造的に発生しない。junction経由の書き込みは即座にOneDrive側の実体に反映され、OneDriveも数秒でCloud Filter API経由の新規ファイルとして認識する（複数マシンでの運用実績あり）
+- **Files On-Demand関連**: `attrib +p /s <path>`でフォルダを再帰的に「常にこのデバイスに保持する」（ピン留め）状態にできる。ピン留め済みファイルも`ReparsePoint`属性を持つのは正常（OneDriveのCloud Filter APIによる管理マーク。クラウド専用＝未ダウンロードを意味しない）
