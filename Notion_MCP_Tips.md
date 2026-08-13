@@ -1,6 +1,6 @@
 # Notion MCP ツール Tips & 注意点
 
-最終更新: 2026-08-03
+最終更新: 2026-08-13
 
 Claude.ai / Claude Code から Notion MCP ツールを使う際のナレッジ集。
 実際の作業で発生したエラーと正しい対処法をまとめる。
@@ -429,6 +429,35 @@ No matches found for <old_strに指定した文字列>.
 
 - 部分置換（`update_content`）で原因不明の不一致が出たら、深追いせず`replace_content`（本文全体を書き換え）に切り替える方が確実
 - 特にリンクを含む段落を`old_str`に使うのは避け、リンクを含まない前後の短い文だけで囲む方が一致しやすい
+
+---
+
+## 17. query-data-sources（SQL）は日本語列名を必ずダブルクォートで囲む。IN(?,?)のパラメータ化はエラーになりやすい
+
+### 症状
+
+```sql
+SELECT 名前, 注文番号 FROM "collection://..." WHERE 注文番号 IN (?, ?)
+```
+
+のように列名をダブルクォートで囲まずに書き、かつ`WHERE`句で`IN (?, ?)`という複数バインドパラメータを使ったところ、次のエラーになった。
+
+```
+Failed to execute query: Only a single SELECT query against the provided collection views is permitted. Reason: the query could not be parsed safely.
+```
+
+### 正しい形式
+
+列名を`"名前"`のようにダブルクォートで囲み、`IN(?,?)`のようなパラメータ配列展開は避けて`=`の`OR`連結に書き換えたところ成功した。
+
+```sql
+SELECT "名前", "注文番号" FROM "collection://..." WHERE "注文番号" = '250-XXXXXXX-XXXXXXX' OR "注文番号" = '250-YYYYYYY-YYYYYYY'
+```
+
+### 教訓
+
+- 日本語（非ASCII）列名は`SELECT`・`WHERE`のどちらでも必ずダブルクォートで囲む
+- 複数値の一致判定は`IN (?, ?)`のようなパラメータ配列展開に頼らず、`= 'A' OR = 'B'`のように単純な等価比較を並べる方が安定する
 
 ---
 
