@@ -104,3 +104,29 @@
 - **原因ではないもの**: `~/.codex/config.toml`の`[projects.'<path>'].trust_level`はプロジェクトローカル設定(.codex/配下のhooks/rules)の読み込み可否を制御する設定であり、このACL付与の直接原因ではない（当初trust_levelが原因と誤診断したが、Codexとの往復検証で否定された）
 - **対処（暫定）**: VS Code（またはCodexを起動している親プロセス）を終了し、`codex.exe`が完全に終了した状態でツールを実行する。恒久対処（`unelevated`への切り替え、WSL利用等）は未検証
 - **確認済みバージョン**: VS Code拡張機能`openai.chatgpt`同梱のcodex-windows-sandbox-setup.exe（2026-08-15時点）
+
+---
+
+## 2026-08-16: アクティブなsandboxログの実際の場所は`.codex\.sandbox\sandbox.<日付>.log`（サブディレクトリ配下）
+
+- **内容**: `~/.codex/sandbox.<日付>.log`（トップレベル）は内容が薄い簡易ログで、`setup refresh: spawning codex-windows-sandbox-setup.exe`等の詳細な実行記録は`~/.codex/.sandbox/sandbox.<日付>.log`（`.sandbox`サブディレクトリ配下）に記録される
+- **注意**: 両方とも同じファイル名パターンのため混同しやすい。ACL変更やsandbox初期化処理を調査する際は、必ずサブディレクトリ側を確認すること
+- **確認済みバージョン**: codex-cli 0.147.0
+
+---
+
+## 2026-08-16: Windows版Codexには、VS Code拡張機能・スタンドアロンCLIに加え、Microsoft Store版デスクトップアプリという第3の配布経路が存在する
+
+- **内容**: パッケージ名`OpenAI.Codex`（Appx/MSIX）。Windows Storeの製品ID`9PLM9XGG6VKS`、`ChatGPT Installer`という名称のインストーラー経由で導入される。VS Code拡張機能ともCLIスタンドアロン版とも別バイナリで、独自に`app-server`プロセス（`codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled`）を起動する
+- **確認方法**: `Get-AppxPackage -Name "*OpenAI*"`で登録確認。稼働中の`codex.exe`の実体パスが`C:\Program Files\WindowsApps\OpenAI.Codex_...`であれば、このStore版が動いている
+- **注意**: 「ChatGPT」「Codex」関連の検索・インストール操作から意図せず導入されることがある。Windows Sandbox関連の環境トラブルを調査する際は、VS Code拡張機能だけでなくこのStore版アプリの有無も確認すること
+- **アンインストール方法**: `Get-AppxPackage -Name "OpenAI.Codex" | Remove-AppxPackage`。残存データが`%LOCALAPPDATA%\OpenAI\Codex`に残ることがあり、`config.toml`の`notify`・`[mcp_servers.node_repl]`等がこのディレクトリを参照している場合は、削除前に参照除去が必要
+- **確認済みバージョン**: `OpenAI.Codex_26.810.7004.0_x64__2p2nqsd0c76g0`（2026-08-16時点）
+
+---
+
+## 2026-08-16: `code --uninstall-extension`は登録削除のみ保証、バージョン別実体フォルダの即時物理削除は保証されない
+
+- **内容**: VS Code公式のアンインストール方法（拡張機能画面の`Uninstall`または`code --uninstall-extension <id>`）を実行しても、`.vscode\extensions\<id>-<version>`の実体フォルダが即座に消えるとは限らない
+- **正解**: アンインストール後、`code --list-extensions`での登録消失に加えて、実体フォルダの残存有無を別途確認する。残っていた場合は手動削除が必要
+- **確認済みバージョン**: VS Code（2026-08-16時点の版）
