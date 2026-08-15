@@ -94,3 +94,13 @@
   ```
 - **注意**: `--sandbox danger-full-access`（サンドボックスなし）に逃げるのではなく、上記コピーでサンドボックス自体を正常化すること。コピー先はシンボリックリンク先＝バージョンディレクトリなので、**Codex CLIが新バージョンへ自動更新されるたびに再発しうる**（新しい`releases/<新バージョン>/`が作られ、`current`のリンク先が切り替わるため）。同じエラーが出たら毎回この手順を再実行すればよい
 - **確認済みバージョン**: codex-cli 0.147.0（Windows, スタンドアロン版）
+
+---
+
+## 2026-08-15: Windows Elevatedサンドボックスが、現在のworkspace write rootの祖先ディレクトリ全体にEveryone宛の削除拒否ACLを敷く
+
+- **内容**: `[windows] sandbox = "elevated"`設定時、Codexは現在のworkspace（cwd）を書き込み可能ルートとして扱い、その祖先ディレクトリに`Everyone:(CI)(DENY)(DC)`（子オブジェクトの削除拒否）ACLを設定する。この処理は`codex-windows-sandbox-setup.exe`によってコマンド実行のたびに再適用される（ログ: `~/.codex/.sandbox/sandbox.<date>.log`に"setup refresh: spawning codex-windows-sandbox-setup.exe (cwd=...)"として記録される）
+- **症状**: workspaceがOneDriveなど深い階層にある場合、OneDriveルートを含む上位ディレクトリ全体が保護対象になり、Codex以外のツール（Android Studio、Gradle、Claude Code等）からのファイル削除・再生成を伴う操作も`AccessDeniedException`等で失敗するようになる。ACLを手動で除去しても、Codexプロセス（VS Code拡張機能`openai.chatgpt`が自動起動する`codex.exe`を含む）が生きている限り数秒以内に再適用される
+- **原因ではないもの**: `~/.codex/config.toml`の`[projects.'<path>'].trust_level`はプロジェクトローカル設定(.codex/配下のhooks/rules)の読み込み可否を制御する設定であり、このACL付与の直接原因ではない（当初trust_levelが原因と誤診断したが、Codexとの往復検証で否定された）
+- **対処（暫定）**: VS Code（またはCodexを起動している親プロセス）を終了し、`codex.exe`が完全に終了した状態でツールを実行する。恒久対処（`unelevated`への切り替え、WSL利用等）は未検証
+- **確認済みバージョン**: VS Code拡張機能`openai.chatgpt`同梱のcodex-windows-sandbox-setup.exe（2026-08-15時点）

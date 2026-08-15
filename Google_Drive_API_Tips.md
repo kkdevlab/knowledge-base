@@ -20,3 +20,9 @@
 - **判明した事実**: 前述の`drive.google.com/uc?export=download&id=...`が返す303リダイレクトについて、「多くのモバイル自動化ツールは既定で追従する」としていたが、**Tasker（6.7.6-beta）のHTTP Requestアクションは303を自動フォローしない**ことを実機で確認した（`%http_response_code=303`・`%http_data`が空のまま返る）
 - **回避策**: リダイレクト先URL`https://drive.usercontent.google.com/download?id=<FILE_ID>&export=download`を最初から直接指定する。curlで検証したところ、こちらは303を経由せず200 OKで直接ファイル内容が返る（`Content-Disposition: attachment`、`Content-Length`も一致）
 - **教訓**: HTTPクライアントの303自動フォロー可否は個別に確認が必要。フォローしないクライアントを使う場合は、旧URL形式ではなく最初からリダイレクト先の新URL形式を使うべき
+
+## 2026-08-15: search_filesはexcludeContentSnippets: trueを付けないと大量ファイルの一覧取得でトークン上限を超える
+
+- **内容**: フォルダ内の全ファイル一覧を取得する目的（メタデータのみ必要）で`search_files`を呼ぶ際、`excludeContentSnippets`を指定しないと各ファイルの内容スニペットが結果に含まれ、ファイル数が多いフォルダでは応答が数万文字を超えてツール呼び出しがエラーになる
+- **解決方法**: メタデータのみ必要な場合は`excludeContentSnippets: true`を付ける
+- **備考**: タイトルの部分一致検索（`title contains '2026'`等）と組み合わせて対象を絞り込むのも有効

@@ -20,3 +20,13 @@
 - **原因**: 実機に数日前ビルドの古いAPKが入ったままで、当該セッションでの修正が反映されていなかった。`adb install`し直さない限り、ソースコードの変更は実機に自動反映されない
 - **解決方法**: `adb shell dumpsys package <パッケージ名> | grep -E "lastUpdateTime|versionCode"`でインストール済みAPKのビルド日時を確認する。セッション中の修正より古ければ、`./gradlew assembleDebug`→`adb install -r app/build/outputs/apk/debug/app-debug.apk`（`-r`でアプリ内データは保持）で最新化してから再検証する
 - **備考**: 実機での動作確認を行う前に、まずインストール済みAPKの`lastUpdateTime`を確認する習慣をつけると無駄な切り分け作業を避けられる
+
+## 2026-08-15: run-as経由でのcpコマンドが"not directory"エラーになる場合はcatリダイレクトを使う
+
+- **エラー内容**: `adb shell run-as <pkg> cp /data/local/tmp/foo.bin files/datastore/foo.bin`が`cp: 'files/datastore/foo.bin' not directory`で失敗する（宛先ディレクトリ自体は存在している）
+- **原因**: 不明（toybox cpの実装依存と見られる）
+- **解決方法**: `cp`の代わりに`sh -c`とリダイレクトを使う
+  ```
+  adb shell "run-as <pkg> sh -c 'cat /data/local/tmp/foo.bin > files/datastore/foo.bin'"
+  ```
+- **備考**: 事前に`adb push`でファイルを`/data/local/tmp/`へ転送する際、パスの先頭が`/`のためGit Bash(MSYS)変換に注意（`MSYS_NO_PATHCONV=1`、上記2026-07-21のエントリ参照）
