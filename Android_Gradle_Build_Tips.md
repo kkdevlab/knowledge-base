@@ -58,3 +58,21 @@
 - **原因**: procmonで解析した結果、対象ディレクトリは実際には空にもかかわらず、`SetDispositionInformationEx`（`FILE_DISPOSITION_POSIX_SEMANTICS`フラグ）が`CANNOT DELETE`で失敗する。OneDrive・Windows Defender・Gradleデーモン・Gradle VFSファイル監視・JDKバージョン(21/25)はいずれも無関係と切り分け済み。AGPを8.5.2系にダウングレードすると解消するため、AGP 9.1.0（Kotlinビルトインサポート等の新機能を含む新しいタスク実装）自体のバグと推定される
 - **解決方法**: AGP 9.1.0の使用を避け、AGP 8.x系（Kotlin Gradle Pluginを明示的に追加する構成）にダウングレードする。または将来のAGP修正版リリースを待つ
 - **備考**: Gradle公式でもこの種のエラーメッセージ自体が真因を提示できていないことを開発チームが認めている（[gradle/gradle#25984](https://github.com/gradle/gradle/issues/25984)）。JDK単体の`Files.delete()`は正常動作するため（`jshell`のスクリプトファイル末尾に`/exit`を書くとヘッドレス実行できる）、JDK自体の欠陥ではなくGradle/AGP側の問題と判断できる
+
+## 2026-08-16（訂正）: 上記「Unable to delete directory」バグはAGPバージョンとは無関係と判明
+
+- **訂正内容**: 上記エントリで「AGP 9.1.0自体のバグ」と推定したが、後日の追加調査でAGP 8.5.2にダウングレードしても実プロジェクトでは同じエラーが再現することを確認。AGPバージョンに依存しない、Gradle自身の削除処理（`SetDispositionInformationEx`/`FILE_DISPOSITION_POSIX_SEMANTICS`）特有の既知バグ（gradle/gradle#25984相当）である可能性が高い
+- **切り分け結果**: CLI（`gradlew`）・IDE（Android StudioのUI「Clean Project」）どちらでも再現。PC再起動後も再現。通常の差分ビルド（コード修正→Run App）には影響せず、`clean`を明示的に呼んだ場合のみ発生
+- **実務上の回避策**: `gradlew clean`やIDEの「Clean Project」を使わず、Windowsエクスプローラーから`app\build`フォルダを手動削除する（成功を確認済み）。AGPダウングレードは対処にならない上、後述の別問題（compileSdk上限・依存ライブラリ矛盾）を誘発するだけなので推奨しない
+
+## 2026-08-16: Kotlin Gradle Plugin 1.9.24はJDK 25（バージョン文字列 "25.0.2"）を解析できない
+
+- **エラー内容**: `java.lang.IllegalArgumentException: 25.0.2`（`org.jetbrains.kotlin.com.intellij.util.lang.JavaVersion.parse`）
+- **原因**: Kotlin 1.9.24のバンドルJavaVersionパーサーが、JDK 25系のバージョン文字列形式に対応していない
+- **解決方法**: Gradle実行時のJDK（`JAVA_HOME`または`-Dorg.gradle.java.home`）をJDK21系に切り替える。Gradleが自動プロビジョニングした`%USERPROFILE%\.gradle\jdks\eclipse_adoptium-21-amd64-windows.*`等が使える
+- **備考**: Android Studio付属JBRの既定バージョンが25系に上がったことで、古いKotlin Gradle Pluginとの組み合わせで顕在化する
+
+## 2026-08-16: AGP 8.5.2はcompileSdk 34が上限、依存ライブラリ側の要求バージョンと衝突しうる
+
+- **内容**: AGP 8.5.2はcompileSdk 34までしかテストされておらず、compileSdk 35/36を要求する構成では`checkDebugAarMetadata`等のタスクが失敗する。特に`androidx.work:work-runtime:2.10.0`はcompileSdk 35以上を要求するため、AGP8.5.2との組み合わせは非両立
+- **教訓**: AGPをダウングレードする際は、compileSdk自体の対応上限だけでなく、依存ライブラリ側が要求する最低compileSdkバージョンも事前に確認する必要がある
