@@ -130,3 +130,12 @@
 - **内容**: VS Code公式のアンインストール方法（拡張機能画面の`Uninstall`または`code --uninstall-extension <id>`）を実行しても、`.vscode\extensions\<id>-<version>`の実体フォルダが即座に消えるとは限らない
 - **正解**: アンインストール後、`code --list-extensions`での登録消失に加えて、実体フォルダの残存有無を別途確認する。残っていた場合は手動削除が必要
 - **確認済みバージョン**: VS Code（2026-08-16時点の版）
+
+---
+
+## 2026-08-16: CodexSandboxOffline/Onlineユーザーを削除するとエラー1332で機能不全になる。安全な復旧方法
+
+- **内容**: Codex Windows版のサンドボックス用ローカルユーザー（`CodexSandboxOffline`・`CodexSandboxOnline`）・グループ（`CodexSandboxUsers`）を削除すると、`helper_sid_resolve_failed: resolve SID for offline user CodexSandboxOffline failed: LookupAccountNameW failed for CodexSandboxOffline: 1332`というエラーでサンドボックス機能が使えなくなる（OpenAI公式issue #34902と一致）
+- **原因**: `C:\Users\<user>\.codex\.sandbox-secrets\sandbox_users.json`と`.codex\.sandbox\setup_marker.json`にセットアップ済みの記録が残ったままローカルアカウントだけが消えるため、SID解決に失敗する
+- **安全な復旧方法**: ユーザー・グループを手動再作成しない（DPAPI暗号化パスワードとの不一致でログオンエラーになる）。代わりに、Codexを完全終了した状態で`sandbox_users.json`のみを同一ディレクトリ内で日時付きバックアップ名にリネームし、Codex CLIを起動→何らかのコマンド実行を指示すると、管理者権限のセットアップ要求（UAC）が表示され、承認するとCodex自身がフルセットアップをやり直し、新しいSIDで正常復旧する
+- **確認済みバージョン**: codex-cli 0.147.0
