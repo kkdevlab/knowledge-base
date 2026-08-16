@@ -45,3 +45,16 @@
 - **原因**: Android Gradle PluginのDSLブロック（`defaultConfig{}`等）内では、トップレベルの`java`パッケージ参照がAGP側のプロパティ/レシーバーに解決されてしまい、`java.text.X`のような完全修飾参照が期待通りに機能しないことがある
 - **解決方法**: ファイル冒頭で`import java.text.SimpleDateFormat`・`import java.util.Date`のように明示的にimportし、ブロック内では`SimpleDateFormat(...)`のように完全修飾せず使う
 - **備考**: `buildConfigField`で動的な値（ビルド時刻等）を埋め込む場合など、`defaultConfig{}`内でJava標準クラスを直接呼びたい場面で発生しやすい
+
+## 2026-08-16: GradleはJAVA_HOMEと実際にビルドを実行するJDKが異なることがある
+
+- **内容**: `gradlew`起動時のJAVA_HOME（ラウンチャー用JVM）と、Gradleが実際にタスクを実行するJDKは別。GradleはGradle自身がtoolchain用に`~/.gradle/jdks/`配下へ自動プロビジョニングしたJDK（例: Eclipse Temurin）を優先使用し、JAVA_HOMEを無視することがある
+- **確認方法**: procmonでビルド実行中のjava.exeの実プロセスパスを確認するか、`--info`ログの`Received JVM installation metadata`行で確認できる
+- **明示指定する方法**: `-Dorg.gradle.java.home=<JDKパス>`をコマンドラインで渡す
+
+## 2026-08-16: AGP 9.1.0 + Windowsで`gradlew clean`が「Unable to delete directory」で決定論的に失敗する既知の不具合
+
+- **エラー内容**: `java.io.IOException: Unable to delete directory 'app\build'` / `Failed to delete some children. This might happen because a process has files open...`。`clean`タスクに限らず`generateDebugBuildConfig`等、Gradleの削除処理全般で発生
+- **原因**: procmonで解析した結果、対象ディレクトリは実際には空にもかかわらず、`SetDispositionInformationEx`（`FILE_DISPOSITION_POSIX_SEMANTICS`フラグ）が`CANNOT DELETE`で失敗する。OneDrive・Windows Defender・Gradleデーモン・Gradle VFSファイル監視・JDKバージョン(21/25)はいずれも無関係と切り分け済み。AGPを8.5.2系にダウングレードすると解消するため、AGP 9.1.0（Kotlinビルトインサポート等の新機能を含む新しいタスク実装）自体のバグと推定される
+- **解決方法**: AGP 9.1.0の使用を避け、AGP 8.x系（Kotlin Gradle Pluginを明示的に追加する構成）にダウングレードする。または将来のAGP修正版リリースを待つ
+- **備考**: Gradle公式でもこの種のエラーメッセージ自体が真因を提示できていないことを開発チームが認めている（[gradle/gradle#25984](https://github.com/gradle/gradle/issues/25984)）。JDK単体の`Files.delete()`は正常動作するため（`jshell`のスクリプトファイル末尾に`/exit`を書くとヘッドレス実行できる）、JDK自体の欠陥ではなくGradle/AGP側の問題と判断できる

@@ -95,3 +95,20 @@
 
 - **内容**: `Everyone:(CI)(DENY)(DC)`（FILE_DELETE_CHILD拒否）が親フォルダに付与されていても、ユーザー自身が対象ファイル・親フォルダに明示的な`(F)`Allowエントリを持っていれば、そのユーザーの各種アプリ（PowerShell・エクスプローラー等）経由の削除は成功する
 - **注意**: DCフラグは「Everyoneグループとしての親経由削除」のみを拒否するものであり、個別ユーザーの直接DELETE権限までは阻害しない。「DENY ACEがある＝削除できない」と早合点せず、実際に削除を試して実害の有無を確認すること
+
+---
+
+## winget経由のSysinternalsツールインストールは「Installer hash does not match」で失敗しやすい
+
+- **症状**: `winget install --id Microsoft.Sysinternals.ProcessMonitor`が"Installer hash does not match"で失敗する
+- **原因**: Sysinternalsの配布ファイルはMicrosoft側で頻繁にライブ更新される一方、wingetのパッケージマニフェストのハッシュ値が追従できておらず不一致になる（既知の構造的な問題）
+- **対処**: `--ignore-security-hash`での強行は非推奨。代替として、Microsoft公式サイト(`https://download.sysinternals.com/`または`live.sysinternals.com`)から直接ダウンロードするか、既に動作確認済みのバイナリを正式なツールディレクトリ（例: `C:\Tools\Sysinternals`）へ配置し、ユーザーPATHに登録する
+
+---
+
+## Process Monitor(procmon)をコマンドラインでヘッドレスにキャプチャ・CSV変換する
+
+- **キャプチャ開始**: `Procmon64.exe /AcceptEula /Quiet /Minimized /BackingFile <出力先.pml>`
+- **キャプチャ停止**: `Procmon64.exe /Terminate`
+- **CSV変換**: `Procmon64.exe /OpenLog <file.pml> /SaveAs <file.csv>`（**`/Terminate`を同時指定すると変換未完了のまま終了することがある**ため、`/Terminate`なしで実行し、`Get-Process Procmon64`が消えるまでポーリングで完了を待つこと）
+- **備考**: 500MB超のPMLでも数十秒程度でCSV変換できる。大量データはCSV化後に`grep`/`awk`でResult列を集計すると解析しやすい
