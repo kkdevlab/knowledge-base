@@ -64,3 +64,25 @@
 - **CLAUDE.mdとの違い**: `--system-prompt-file`はそのプロセス実行1回だけに効く一時的な指定。CLAUDE.md/ディレクトリ配下の自動読込ファイルとは無関係で、非対話スクリプト実行の文脈では明確に別物として扱う
 - **用途**: PowerShellスクリプト等から`claude.exe`を叩いて、プロンプトをファイル管理しつつAIの結果だけをテキスト/JSONで取得する自動化パターンに使える
 - **確認方法**: `claude --help`で`--system-prompt-file`が「引数不足」エラーを返すことで実在フラグと確認済み（`claude --help`のメイン出力には掲載されないが、他フラグの説明文中に`--system-prompt[-file]`という表記で存在が示唆されている）
+
+---
+
+## 2026-08-18: `.claude/`配下の構造で誤解しやすい点（output-styles/plugins/rules/hooks）
+
+- **内容**: プロジェクト構造の各ディレクトリの正誤は以下の通り
+  - `.claude/output-styles/`: **公式に実在する**。応答の役割・トーン・出力形式をシステムプロンプトに追加する機能。ユーザー/プロジェクト/管理ポリシーの3スコープで配置可能
+  - `.claude/plugins/`: **ユーザーが手動作成する場所ではない**。マーケットプレイス経由インストールは`~/.claude/plugins/cache/`に自動配置され、手動編集非推奨
+  - `.claude/rules/`: 慣習ではなく**公式機能**。CLAUDE.mdをトピック別に分割する正式な仕組みで、`paths:` frontmatterによるファイル種別ごとの条件付きロードにも対応
+  - `.claude/hooks/`: hooks本体は`settings.json`内のJSONで定義するのが正式仕様。`.claude/hooks/`はそこから呼ぶスクリプトの置き場所という**広く使われる慣習**であり、ディレクトリ名自体が仕様で固定されているわけではない
+- **確認方法**: サブエージェント経由の一次回答（`claude-code-guide`）に誤り（output-styles/pluginsの実在性を誤判定）があったため、公式ドキュメント（code.claude.com/docs/en/settings, /output-styles, /memory, /plugins-reference）を直接WebFetchして裏取りした
+- **教訓**: Claude Code自体の仕様確認は、サブエージェントの一次回答だけで確定させず、公式ドキュメントで裏取りするのが安全
+
+---
+
+## 2026-08-18: SessionStartフックは「無入力での自動発言」はできない（アーキテクチャ制約）＋新規会話での既知バグ
+
+- **内容**: `SessionStart`フックはセッション開始・再開時に自動実行され、シェルスクリプトの実行自体は無入力で完結する（例: 経過日数の判定、ファイル書き込み）。ただし、その出力（stdout / `additionalContext`）が会話コンテキストに注入されても、Claudeがそれを「発言」できるのは常にユーザーからのメッセージへの応答としてのみ。ユーザー入力なしにClaude側から自発的にプッシュ通知的な発言をする仕組みは存在しない
+  - フックからClaude Codeの「スキル」（SKILL.md）を直接起動するAPIもない。フックはシェルコマンド実行機構であり、スキル呼び出しはLLM側の判断に委ねられる
+- **既知の未修正バグ**: [GitHub Issue #10373](https://github.com/anthropics/claude-code/issues/10373)（OPEN, 2026-08時点未修正）。「新しい会話（new conversation）」を開始した場合、`SessionStart`フックは実行されるが出力が会話コンテキストに反映されない。`/clear`コマンドや`--resume`での再開時は正常に機能する。原因はCLI内部で新規セッション時にフック結果処理関数(`qz("startup")`)が呼ばれていないこと
+- **確認方法**: 公式Hooksドキュメント（code.claude.com/docs/en/hooks, /hooks-guide）とGitHub Issue #10373を確認
+- **KKラボでの実例**: `kk-health`のSessionStartフック（`.claude/settings.local.json` + `.claude/scripts/check_kk_health.py`）は、この制約を踏まえ「フック側はdeterministicな判定のみ、通知はClaudeの最初の応答冒頭で行う」という設計になっている
